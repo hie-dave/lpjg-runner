@@ -1,0 +1,49 @@
+# PFTs to be used in the run. This can can be omitted to run all PFTs.
+pfts = ["C3G", "C4G"]
+
+# Instruction files to be run.
+insfiles = ["/x.ins", "/y.ins"]
+
+# If true, the run directories will be created but not submitted to PBS.
+dry_run = true
+
+# Output directory. Outputs and run configuration will be written here.
+output_directory = "/path/to/output/directory"
+
+# Path to the guess executable.
+guess_path = "/path/to/guess"
+
+# Input module to be used by LPJ-Guess.
+input_module = "nc"
+
+# Number of CPUs to be allocated to each run.
+cpu_count = 1
+
+# Maximum amount of walltime for each run.
+walltime = "01:00:00"
+
+# Amount of memory to be allocated to each run, in GiB.
+memory = 1
+
+# PBS queue to be used for running the jobs.
+queue = "normal"
+
+# NCI project to be used for running the jobs.
+project = "pt17"
+
+# true to receive email notifications of job status, false otherwise.
+email_notifications = true
+
+# Email address which should receive email notifications. May be omitted iff
+# email_notifications is false.
+email_address = "me@example.com"
+
+# Base name of all jobs. (Each factorial will have a unique suffix appended to
+# this name.)
+job_name = "example"
+
+# List of parameter changes to be applied. Each instruction file will be run for
+# all combinations of these changes.
+[parameters]
+temperature_delta = [0, 3]
+co2_delta = [0, 50]

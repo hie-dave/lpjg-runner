@@ -215,6 +215,7 @@ public class Instructions
 			const string outDir = "OUT_DIR";
 			const string insfile = "INSFILE";
 			const string inputModule = "INPUT_MODULE";		
+			const string experiment = "EXPERIMENT";
 
 			string confFile = Path.GetTempFileName();
 
@@ -233,6 +234,7 @@ public class Instructions
 				await Write(writer, outDir, Settings.OutputDirectory);
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
+				await Write(writer, experiment, Guid.NewGuid().ToString());
 			}
 			return confFile;
 		}

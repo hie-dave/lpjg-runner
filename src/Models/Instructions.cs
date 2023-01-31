@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 
 namespace LpjGuess.Runner.Models;
 
@@ -291,7 +292,8 @@ public class Instructions
 	/// <param name="value">Value.</param>
 	private async Task Write(TextWriter writer, string key, uint value)
 	{
-		await writer.WriteLineAsync($"{key}={value:CultureInfo.InvariantCulture}");
+		string str = value.ToString(CultureInfo.InvariantCulture);
+		await writer.WriteLineAsync($"{key}={str}");
 	}
 
 	/// <summary>
@@ -302,7 +304,8 @@ public class Instructions
 	/// <param name="value">Value.</param>
 	private async Task Write(TextWriter writer, string key, int value)
 	{
-		await writer.WriteLineAsync($"{key}={value:CultureInfo.InvariantCulture}");
+		string str = value.ToString(CultureInfo.InvariantCulture);
+		await writer.WriteLineAsync($"{key}={str}");
 	}
 
 	/// <summary>

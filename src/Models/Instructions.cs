@@ -5,6 +5,9 @@ namespace LpjGuess.Runner.Models;
 /// <summary>
 /// Changes to be applied to a collection of LPJ-Guess instruction files.
 /// </summary>
+/// <remarks>
+/// Refactor most of the logic out of here.
+/// </remarks>
 public class Instructions
 {
 	/// <summary>
@@ -92,10 +95,25 @@ public class Instructions
 				// Run this factorial (well, submit the job for running).
 				ct.ThrowIfCancellationRequested();
 
-				string confFile = await GenerateConfFile(insFile);
-				ct.ThrowIfCancellationRequested();
+				string confFile = await GenerateConfFile(targetInsFile);
+				try
+				{
+					ct.ThrowIfCancellationRequested();
 
-				await Submit(targetInsFile, confFile, ct);
+					await Submit(targetInsFile, confFile, ct);
+				}
+				finally
+				{
+					try
+					{
+						if (File.Exists(confFile))
+							File.Delete(confFile);
+					}
+					catch (Exception error)
+					{
+						CleanupFailure(error, confFile);
+					}
+				}
 			}
 			finally
 			{
@@ -108,11 +126,20 @@ public class Instructions
 				}
 				catch (Exception error)
 				{
-					Console.Error.WriteLine($"WARNING: Failed to clean temporary file: '{targetInsFile}':");
-					Console.Error.WriteLine(error);
+					CleanupFailure(error, targetInsFile);
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Report a cleanup failure in such a way that doesn't raise another exception.
+	/// </summary>
+	/// <param name="error">The error.</param>
+	private void CleanupFailure(Exception error, string file)
+	{
+		Console.Error.WriteLine($"WARNING: Failed to clean temporary file: '{file}':");
+		Console.Error.WriteLine(error);
 	}
 
 	/// <summary>
@@ -145,12 +172,12 @@ public class Instructions
 		{
 			try
 			{
-				File.Delete(targetInsFile);
+				if (File.Exists(targetInsFile))
+					File.Delete(targetInsFile);
 			}
 			catch (Exception nested)
 			{
-				Console.WriteLine($"WARNING: Failed to clean temporary file: '{targetInsFile}':");
-				Console.WriteLine(nested);
+				CleanupFailure(nested, targetInsFile);
 			}
 			throw new Exception($"Failed to apply overrides to file '{insFile}'", error);
 		}	

@@ -87,11 +87,12 @@ public class Instructions
 		Directory.SetCurrentDirectory(directory);
 
 		// Run each factorial one by one.
+		int id = 0;
 		foreach (Factorial factorial in Factorials)
 		{
 			// Apply changes from this factorial.
 			ct.ThrowIfCancellationRequested();
-			string targetInsFile = ApplyOverrides(factorial, insFile);
+			string targetInsFile = ApplyOverrides(factorial, insFile, id.ToString(CultureInfo.InvariantCulture));
 
 			try
 			{
@@ -104,6 +105,7 @@ public class Instructions
 					ct.ThrowIfCancellationRequested();
 
 					await Submit(targetInsFile, confFile, ct);
+					id++;
 				}
 				finally
 				{
@@ -152,11 +154,12 @@ public class Instructions
 	/// </summary>
 	/// <param name="factorial">Changes to be applied to the .ins file.</param>
 	/// <param name="insFile">Path to an instruction file.</param>
-	private string ApplyOverrides(Factorial factorial, string insFile)
+	/// <param name="name">Unique name given to this factorial run.</param>
+	private string ApplyOverrides(Factorial factorial, string insFile, string name)
 	{
 		string file = Path.GetFileNameWithoutExtension(insFile);
 		string ext = Path.GetExtension(insFile);
-		string targetInsFile = Path.Combine(Directory.GetCurrentDirectory(), $"{file}-{Guid.NewGuid()}{ext}");
+		string targetInsFile = Path.Combine(Directory.GetCurrentDirectory(), $"{file}-{name}{ext}");
 
 		File.Copy(insFile, targetInsFile);
 
@@ -248,7 +251,8 @@ public class Instructions
 			const string inputModule = "INPUT_MODULE";		
 			const string experiment = "EXPERIMENT";
 
-			string confFile = Path.GetTempFileName();
+			string name = Path.GetFileNameWithoutExtension(insFile);
+			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
 			using (Stream stream = File.OpenWrite(confFile))
 			using (TextWriter writer = new StreamWriter(stream))
@@ -265,7 +269,7 @@ public class Instructions
 				await Write(writer, outDir, Settings.OutputDirectory);
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
-				await Write(writer, experiment, Guid.NewGuid().ToString());
+				await Write(writer, experiment, $"{Settings.JobName}_{name}");
 			}
 			return confFile;
 		}

@@ -256,7 +256,7 @@ public class Instructions
 				await Write(writer, binary, Settings.GuessPath);
 				await Write(writer, nprocess, Settings.CpuCount);
 				await Write(writer, walltime, Settings.Walltime);
-				await Write(writer, memory, $"{Settings.Memory:CultureInfo.InvariantCulture}GB");
+				await Write(writer, memory, $"{Settings.Memory}GB");
 				await Write(writer, queue, Settings.Queue);
 				await Write(writer, project, Settings.Project);
 				await Write(writer, email, Settings.EmailAddress);

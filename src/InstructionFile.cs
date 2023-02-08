@@ -59,7 +59,6 @@ public class InstructionFile
 			"file_met_forcing",
 			"file_gridlist",
 			"file_soildata",
-			""
 		};
 		string[] paramsToFix = new[]
 		{

@@ -143,7 +143,7 @@ public class InstructionFile
 	/// <returns></returns>
 	private string GetParamRegex(string name)
 	{
-		return $@"^([ \t]*param[ \t]+""{name}""[ \t]+\(str[ \t]+"")([^""]+)""\)(.*)";
+		return $@"^([ \t]*param[ \t]+""{name}""[ \t]+\(str[ \t]+"")([^""]+)(""\).*)";
 	}
 
 	/// <summary>

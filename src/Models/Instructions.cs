@@ -254,6 +254,11 @@ public class Instructions
 			string name = Path.GetFileNameWithoutExtension(insFile);
 			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
+			string job = $"{Settings.JobName}_{name}";
+			string actualOutDir = Path.Combine(Settings.OutputDirectory, job);
+			if (Directory.Exists(actualOutDir))
+				throw new InvalidOperationException($"Output directory '{actualOutDir}' already exists. Please change the output location or delete the existing directory.");
+
 			using (Stream stream = File.OpenWrite(confFile))
 			using (TextWriter writer = new StreamWriter(stream))
 			{
@@ -269,7 +274,7 @@ public class Instructions
 				await Write(writer, outDir, Settings.OutputDirectory);
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
-				await Write(writer, experiment, $"{Settings.JobName}_{name}");
+				await Write(writer, experiment, job);
 			}
 			return confFile;
 		}

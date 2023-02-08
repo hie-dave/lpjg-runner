@@ -44,8 +44,10 @@ public class Instructions
 	{
 		InsFiles = insFiles;
 		Pfts = pfts;
-		Factorials = factorials;
 		Settings = settings;
+		if (factorials.Count == 0)
+			factorials = new List<Factorial>() { new Factorial(new List<Factor>()) };
+		Factorials = factorials;
 	}
 
 	/// <summary>

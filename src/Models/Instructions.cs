@@ -204,6 +204,7 @@ public class Instructions
 			using (Process proc = new Process())
 			{
 				proc.StartInfo.FileName = submitScript;
+				proc.StartInfo.ArgumentList.Add("-q");
 				proc.StartInfo.ArgumentList.Add("-s");
 				proc.StartInfo.ArgumentList.Add(confFile);
 				if (Settings.DryRun)

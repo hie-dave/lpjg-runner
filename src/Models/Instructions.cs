@@ -98,7 +98,7 @@ public class Instructions
 				// Run this factorial (well, submit the job for running).
 				ct.ThrowIfCancellationRequested();
 
-				string confFile = await GenerateConfFile(targetInsFile);
+				string confFile = await GenerateConfFile(targetInsFile, factorial.GetName());
 				try
 				{
 					ct.ThrowIfCancellationRequested();
@@ -230,7 +230,8 @@ public class Instructions
 	/// Generate the config file which may be passed to the submit script.
 	/// </summary>
 	/// <param name="insFile">Path to the .ins file.</param>
-	private async Task<string> GenerateConfFile(string insFile)
+	/// <param name="factName">A name which uniquely identifies this factorial.</param>
+	private async Task<string> GenerateConfFile(string insFile, string factName)
 	{
 		try
 		{
@@ -252,8 +253,7 @@ public class Instructions
 			string name = Path.GetFileNameWithoutExtension(insFile);
 			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
-			string job = $"{Settings.JobName}_{name}";
-			string actualOutDir = Path.Combine(Settings.OutputDirectory, job);
+			string actualOutDir = Path.Combine(Settings.OutputDirectory, Settings.JobName, factName);
 			if (Directory.Exists(actualOutDir))
 				throw new InvalidOperationException($"Output directory '{actualOutDir}' already exists. Please change the output location or delete the existing directory.");
 
@@ -268,11 +268,11 @@ public class Instructions
 				await Write(writer, project, Settings.Project);
 				await Write(writer, email, Settings.EmailAddress);
 				await Write(writer, emailNotifications, Settings.EmailNotifications ? "1" : "0");
-				await Write(writer, jobName, Settings.JobName);
+				await Write(writer, jobName, factName);
 				await Write(writer, outDir, Settings.OutputDirectory);
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
-				await Write(writer, experiment, job);
+				await Write(writer, experiment, Settings.JobName);
 			}
 			return confFile;
 		}

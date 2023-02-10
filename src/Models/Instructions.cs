@@ -268,11 +268,11 @@ public class Instructions
 				await Write(writer, project, Settings.Project);
 				await Write(writer, email, Settings.EmailAddress);
 				await Write(writer, emailNotifications, Settings.EmailNotifications ? "1" : "0");
-				await Write(writer, jobName, factName);
-				await Write(writer, outDir, Settings.OutputDirectory);
+				await Write(writer, jobName, $"{Settings.JobName}_{factName}");
+				await Write(writer, outDir, Path.Combine(Settings.OutputDirectory, Settings.JobName));
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
-				await Write(writer, experiment, Settings.JobName);
+				await Write(writer, experiment, factName);
 			}
 			return confFile;
 		}

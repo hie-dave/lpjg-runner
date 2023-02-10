@@ -91,14 +91,15 @@ public class Instructions
 		{
 			// Apply changes from this factorial.
 			ct.ThrowIfCancellationRequested();
-			string targetInsFile = ApplyOverrides(factorial, insFile, factorial.GetName());
+			string jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{factorial.GetName()}";
+			string targetInsFile = ApplyOverrides(factorial, insFile, jobName);
 
 			try
 			{
 				// Run this factorial (well, submit the job for running).
 				ct.ThrowIfCancellationRequested();
 
-				string confFile = await GenerateConfFile(targetInsFile, factorial.GetName());
+				string confFile = await GenerateConfFile(targetInsFile, jobName);
 				try
 				{
 					ct.ThrowIfCancellationRequested();

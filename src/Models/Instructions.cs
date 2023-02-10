@@ -87,12 +87,11 @@ public class Instructions
 		Directory.SetCurrentDirectory(directory);
 
 		// Run each factorial one by one.
-		int id = 0;
 		foreach (Factorial factorial in Factorials)
 		{
 			// Apply changes from this factorial.
 			ct.ThrowIfCancellationRequested();
-			string targetInsFile = ApplyOverrides(factorial, insFile, id.ToString(CultureInfo.InvariantCulture));
+			string targetInsFile = ApplyOverrides(factorial, insFile, factorial.GetName());
 
 			try
 			{
@@ -105,7 +104,6 @@ public class Instructions
 					ct.ThrowIfCancellationRequested();
 
 					await Submit(targetInsFile, confFile, ct);
-					id++;
 				}
 				finally
 				{

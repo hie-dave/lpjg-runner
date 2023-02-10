@@ -1,5 +1,3 @@
-using System.Text.RegularExpressions;
-
 namespace LpjGuess.Runner.Models;
 
 /// <summary>
@@ -20,5 +18,13 @@ public class Factorial
 	public Factorial(IReadOnlyCollection<Factor> factors)
 	{
 		Factors = factors;
+	}
+
+	/// <summary>
+	/// Get a name which describes the factorial.
+	/// </summary>
+	public string GetName()
+	{
+		return string.Join("-", Factors.Select(f => $"{f.Name}_{f.Value}"));
 	}
 }

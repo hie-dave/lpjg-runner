@@ -253,7 +253,17 @@ public class Instructions
 			string name = Path.GetFileNameWithoutExtension(insFile);
 			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
-			string actualOutDir = Path.Combine(Settings.OutputDirectory, Settings.JobName, factName);
+			// This is the OUTPUT_DIR we pass to the submit script.
+			string outPath = Path.Combine(Settings.OutputDirectory, Settings.JobName);
+			if (!Directory.Exists(outPath))
+				Directory.CreateDirectory(outPath);
+
+			// This is the actual directory the submit script will use for this
+			// particular job. If it already exists, that means the user has
+			// probably accidentally re-used the same directory. We don't want
+			// to overwrite files from a previous run, so let's force them to be
+			// explcit about what they want.
+			string actualOutDir = Path.Combine(outPath, factName);
 			if (Directory.Exists(actualOutDir))
 				throw new InvalidOperationException($"Output directory '{actualOutDir}' already exists. Please change the output location or delete the existing directory.");
 
@@ -269,7 +279,7 @@ public class Instructions
 				await Write(writer, email, Settings.EmailAddress);
 				await Write(writer, emailNotifications, Settings.EmailNotifications ? "1" : "0");
 				await Write(writer, jobName, $"{Settings.JobName}_{factName}");
-				await Write(writer, outDir, Path.Combine(Settings.OutputDirectory, Settings.JobName));
+				await Write(writer, outDir, outPath);
 				await Write(writer, insfile, insFile);
 				await Write(writer, inputModule, Settings.InputModule);
 				await Write(writer, experiment, factName);

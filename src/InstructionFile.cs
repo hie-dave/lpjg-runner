@@ -81,7 +81,7 @@ public class InstructionFile
 			string? value = TryGetParameterValue(parameter);
 			if (value == null)
 				continue;
-			string absolute = new DirectoryInfo(value).FullName;
+			string absolute = GetAbsolutePath(value);
 			SetParameterValue(parameter, absolute);
 		}
 		foreach (string parameter in paramsToFix)
@@ -89,7 +89,7 @@ public class InstructionFile
 			string? value = TryGetParamValue(parameter);
 			if (value == null)
 				continue;
-			string absolute = new DirectoryInfo(value).FullName;
+			string absolute = GetAbsolutePath(value);
 			SetParamValue(parameter, absolute);
 		}
 	}

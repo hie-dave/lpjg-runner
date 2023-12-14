@@ -56,22 +56,15 @@ public class Instructions
 	/// <param name="ct">Cancellation token.</param>
 	public async Task RunAll(CancellationToken ct)
 	{
-		// Record current working directory, and cd back to here after running
-		// each file.
-		string cwd = Directory.GetCurrentDirectory();
-
-		foreach (string insFile in InsFiles)
+		List<Task> tasks = new List<Task>();
+		Parallel.ForEach(InsFiles, insFile =>
 		{
-			try
-			{
-				await RunFile(insFile, ct);
-				ct.ThrowIfCancellationRequested();
-			}
-			finally
-			{
-				Directory.SetCurrentDirectory(cwd);
-			}
-		}
+			Task task = RunFile(insFile, ct);
+			lock (tasks)
+				tasks.Add(task);
+		});
+		foreach (Task task in tasks)
+			await task;
 	}
 
 	/// <summary>
@@ -81,11 +74,6 @@ public class Instructions
 	/// <param name="ct">Cancellation token.</param>
 	private async Task RunFile(string insFile, CancellationToken ct)
 	{
-		// Get directory of .ins file and cd into that directory, so that
-		// resolution of relative paths in the .ins file can succeed.
-		string directory = Path.GetDirectoryName(insFile) ?? Directory.GetCurrentDirectory();
-		Directory.SetCurrentDirectory(directory);
-
 		List<Task> tasks = new List<Task>();
 
 		// Run each factorial one by one.

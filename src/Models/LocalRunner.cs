@@ -6,7 +6,7 @@ namespace LpjGuess.Runner.Models;
 /// <summary>
 /// A class which runs the model in the local environment (ie without PBS).
 /// </summary>
-public class LocalRunner : IRunner
+public class LocalRunner : IJob
 {
     /// <summary>
     /// Path to the model executable.
@@ -14,16 +14,22 @@ public class LocalRunner : IRunner
     private readonly RunSettings settings;
 
     /// <summary>
+    /// Path to the instruction file to be run.
+    /// </summary>
+    private string insFile;
+
+    /// <summary>
     /// Create a new <see cref="LocalRunner"/> instance.
     /// </summary>
     /// <param name="executable">Path to the model executable.</param>
-    public LocalRunner(RunSettings settings)
+    public LocalRunner(string insFile, RunSettings settings)
     {
         this.settings = settings;
+        this.insFile = insFile;
     }
 
     /// <inheritdoc /> 
-    public async Task Run(string insFile, CancellationToken ct)
+    public async Task Run(CancellationToken ct)
     {
         if (settings.DryRun)
             return;

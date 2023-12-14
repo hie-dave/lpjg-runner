@@ -7,7 +7,7 @@ namespace LpjGuess.Runner.Models;
 /// <summary>
 /// A class which runs LPJ-Guess on gadi via PBS.
 /// </summary>
-public class PbsRunner : IRunner
+public class PbsRunner : IJob
 {
     /// <summary>
     /// Name of the lpj-guess submission script.
@@ -25,18 +25,24 @@ public class PbsRunner : IRunner
     private readonly RunSettings settings;
 
     /// <summary>
+    /// Path to the instruction file to be run.
+    /// </summary>
+    private string insFile;
+
+    /// <summary>
     /// Create a new <see cref="PbsRunner"/> instance.
     /// </summary>
     /// <param name="jobName">Name of the job to use in PBS.</param>
     /// <param name="dryRun">True to do a dry-run (ie not submit to PBS). False to run the job.</param>
-    public PbsRunner(string jobName, RunSettings settings)
+    public PbsRunner(string insFile, string jobName, RunSettings settings)
     {
         this.jobName = jobName;
         this.settings = settings;
+        this.insFile = insFile;
     }
 
     /// <inheritdoc />
-    public async Task Run(string insFile, CancellationToken ct)
+    public async Task Run(CancellationToken ct)
     {
 		try
 		{

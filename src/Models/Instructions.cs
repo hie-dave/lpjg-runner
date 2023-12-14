@@ -56,22 +56,33 @@ public class Instructions
 	/// <param name="ct">Cancellation token.</param>
 	public async Task RunAll(CancellationToken ct)
 	{
+		IReadOnlyList<IJob> jobs = GetJobs(ct);
+		JobManager jobManager = jobManager(Settings.LocalCpuCount);
+		await jobManager.RunAll(jobs);
+	}
+
+	private IReadOnlyList<IJob> GetJobs(CancellationToken ct)
+	{
 		// Record current working directory, and cd back to here after running
 		// each file.
 		string cwd = Directory.GetCurrentDirectory();
 
-		foreach (string insFile in InsFiles)
+		List<IJob> allRunners = new List<IJob>();
+		Parallel.ForEach(InsFiles, insFile =>
 		{
 			try
 			{
-				await RunFile(insFile, ct);
+				IEnumerable<IJob> runners = RunFile(insFile, ct);
 				ct.ThrowIfCancellationRequested();
+				lock(allRunners)
+					allRunners.AddRange(runners);
 			}
 			finally
 			{
 				Directory.SetCurrentDirectory(cwd);
 			}
-		}
+		});
+		return allRunners;
 	}
 
 	/// <summary>
@@ -79,29 +90,22 @@ public class Instructions
 	/// </summary>
 	/// <param name="insFile">Path to the instruction file.</param>
 	/// <param name="ct">Cancellation token.</param>
-	private async Task RunFile(string insFile, CancellationToken ct)
+	private IReadOnlyList<IJob> RunFile(string insFile, CancellationToken ct)
 	{
-		// Get directory of .ins file and cd into that directory, so that
-		// resolution of relative paths in the .ins file can succeed.
-		string directory = Path.GetDirectoryName(insFile) ?? Directory.GetCurrentDirectory();
-		Directory.SetCurrentDirectory(directory);
-
-		List<Task> tasks = new List<Task>();
+		List<IJob> runners = new List<IJob>();
 
 		// Run each factorial one by one.
 		// foreach (Factorial factorial in Factorials)
 		Parallel.ForEach(Factorials, factorial =>
 		{
-			Task task = RunFactorial(insFile, factorial, ct);
-			lock (tasks)
-				tasks.Add(task);
+			IJob runner = RunFactorial(insFile, factorial, ct);
+			lock (runners)
+				runners.Add(runner);
 		});
-
-		foreach (Task task in tasks)
-			await task;
+		return runners;
 	}
 
-	private async Task RunFactorial(string insFile, Factorial factorial, CancellationToken ct)
+	private IJob RunFactorial(string insFile, Factorial factorial, CancellationToken ct)
 	{
 		// Apply changes from this factorial.
 		ct.ThrowIfCancellationRequested();
@@ -111,8 +115,7 @@ public class Instructions
 		// Run this factorial (well, submit the job for running).
 		ct.ThrowIfCancellationRequested();
 
-		IRunner runner = CreateRunner(jobName);
-		await runner.Run(targetInsFile, ct);
+		return CreateRunner(targetInsFile, jobName);
 	}
 
 	/// <summary>
@@ -143,10 +146,6 @@ public class Instructions
 
 		try
 		{
-			InstructionFile ins = new InstructionFile(insFile);
-			ins.Flatten();
-			ins.ConvertToAbsolutePaths();
-
 			// Apply changes to the instruction file as required.
 			foreach (Factor factor in factorial.Factors)
 				ins.ApplyChange(factor);
@@ -168,10 +167,10 @@ public class Instructions
 		}	
 	}
 
-	private IRunner CreateRunner(string jobName)
+	private IJob CreateRunner(string insFile, string jobName)
 	{
 		if (Settings.RunLocal)
-			return new LocalRunner(Settings);
-		return new PbsRunner(jobName, Settings);
+			return new LocalRunner(insFile, Settings);
+		return new PbsRunner(insFile, jobName, Settings);
 	}
 }

@@ -59,6 +59,7 @@ internal class TomlParser : IParser
 		bool runLocal = ParseBool(model, "run_local");
 
 		uint cpuCount = ParseUint(model, "cpu_count");
+		uint localCpuCount = ParseUint(model, "local_cpu_count");
 		uint memory = ParseUint(model, "memory");
 		TimeSpan walltime = ParseTimeSpan(model, "walltime");
 
@@ -80,6 +81,7 @@ internal class TomlParser : IParser
 			outputDirectory,
 			guessPath,
 			inputModule,
+			localCpuCount,
 			cpuCount,
 			walltime,
 			memory,

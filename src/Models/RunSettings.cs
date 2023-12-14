@@ -33,7 +33,13 @@ public class RunSettings
 	public string InputModule { get; private init; }
 
 	/// <summary>
-	/// Number of CPUs to be allocated to the job.
+	/// Number of CPUs to use in the local environment for job submission or
+	/// local runs.
+	/// </summary>
+	public uint LocalCpuCount { get; private init; }
+
+	/// <summary>
+	/// Number of CPUs to be allocated to the PBS job.
 	/// </summary>
 	public uint CpuCount { get; private init; }
 
@@ -77,9 +83,11 @@ public class RunSettings
 	/// Create a new <see cref="RunSettings"/> instance.
 	/// </summary>
 	/// <param name="dryRun">Iff true, the run directory will be created but the job will not be submitted.</param>
+	/// <param name="runLocal">True to run simulations in the local environment. False to submit them to PBS.</param>
 	/// <param name="outputDirectory">Output directory of the run.</param>
 	/// <param name="guessPath">Path to the LPJ-Guess executable.</param>
 	/// <param name="inputModule">Input module to be used by LPJ-Guess.</param>
+	/// <param name="localCpuCount">Number of CPUs to use in the local environment for job submission or local runs.</param>
 	/// <param name="cpuCount">Number of CPUs to be allocated to the job.</param>
 	/// <param name="walltime">Maximum walltime allowed for the job.</param>
 	/// <param name="memory">Amount of memory to be allocated to the job.</param>
@@ -88,13 +96,14 @@ public class RunSettings
 	/// <param name="emailNotifications">True to enable email notifications for the job, false otherwise.</param>
 	/// <param name="emailAddress">Email address to be used for the job. Only used if emailNotifications is true.</param>
 	/// <param name="jobName">Name of the job.</param>
-	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, uint cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
+	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, uint localCpuCount, uint cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
 	{
 		DryRun = dryRun;
 		RunLocal = runLocal;
 		OutputDirectory = outputDirectory;
 		GuessPath = guessPath;
 		InputModule = inputModule;
+		LocalCpuCount = localCpuCount;
 		CpuCount = cpuCount;
 		Walltime = walltime;
 		Memory = memory;

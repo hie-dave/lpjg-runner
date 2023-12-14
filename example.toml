@@ -1,5 +1,3 @@
-# PFTs to be used in the run. This can can be omitted to run all PFTs.
-pfts = ["C3G", "C4G"]
 
 # Instruction files to be run.
 insfiles = ["/x.ins", "/y.ins"]

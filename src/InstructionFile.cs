@@ -13,9 +13,8 @@ namespace LpjGuess.Runner;
 public class InstructionFile
 {
 	/// <summary>
-	/// Path to the file.
+	/// Path to the input file.
 	/// </summary>
-	/// <value></value>
 	public string Path { get; private init; }
 
 	/// <summary>
@@ -44,15 +43,27 @@ public class InstructionFile
 		while ( (match = Regex.Match(contents, pattern, opts)) != Match.Empty)
 		{
 			string file = match.Groups[1].Value;
+			string absolutePath = GetAbsolutePath(file);
+			InstructionFile ins = new InstructionFile(absolutePath);
+			ins.Flatten();
 			contents = contents.Remove(match.Index, match.Length);
-			contents = contents.Insert(match.Index, File.ReadAllText(file));
+			contents = contents.Insert(match.Index, ins.Read());
 		}
 	}
 
-	/// <summary>
-	/// Change any relative paths to absolute paths.
-	/// </summary>
-	public void ConvertToAbsolutePaths()
+    private string GetAbsolutePath(string file)
+    {
+		if (System.IO.Path.IsPathRooted(file))
+			return file;
+
+        string relative = System.IO.Path.GetDirectoryName(Path) ?? Directory.GetCurrentDirectory();
+		return System.IO.Path.GetFullPath(file, relative);
+    }
+
+    /// <summary>
+    /// Change any relative paths to absolute paths.
+    /// </summary>
+    public void ConvertToAbsolutePaths()
 	{
 		string[] parameters = new[]
 		{
@@ -228,10 +239,18 @@ public class InstructionFile
 	}
 
 	/// <summary>
+	/// Read the contents of the instruction file.
+	/// </summary>
+	public string Read()
+	{
+		return contents;
+	}
+
+	/// <summary>
 	/// Save any pending changes to disk.
 	/// </summary>
-	public void SaveChanges()
+	public void SaveChanges(string destination)
 	{
-		File.WriteAllText(Path, contents);
+		File.WriteAllText(destination, contents);
 	}
 }

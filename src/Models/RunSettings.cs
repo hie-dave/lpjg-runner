@@ -12,6 +12,12 @@ public class RunSettings
 	public bool DryRun { get; private init; }
 
 	/// <summary>
+	/// If true, will run the model in the local environment. If false, will
+	/// submit the jobs to PBS.
+	/// </summary>
+	public bool RunLocal { get; private init; }
+
+	/// <summary>
 	/// Output directory of the run.
 	/// </summary>
 	public string OutputDirectory { get; private init; }
@@ -82,9 +88,10 @@ public class RunSettings
 	/// <param name="emailNotifications">True to enable email notifications for the job, false otherwise.</param>
 	/// <param name="emailAddress">Email address to be used for the job. Only used if emailNotifications is true.</param>
 	/// <param name="jobName">Name of the job.</param>
-	public RunSettings(bool dryRun, string outputDirectory, string guessPath, string inputModule, uint cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
+	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, uint cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
 	{
 		DryRun = dryRun;
+		RunLocal = runLocal;
 		OutputDirectory = outputDirectory;
 		GuessPath = guessPath;
 		InputModule = inputModule;

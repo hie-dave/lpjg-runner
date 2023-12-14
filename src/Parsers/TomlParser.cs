@@ -56,6 +56,7 @@ internal class TomlParser : IParser
 	private RunSettings ParseRunSettings(TomlTable model)
 	{
 		bool dryRun = ParseBool(model, "dry_run", optional: true);
+		bool runLocal = ParseBool(model, "run_local");
 
 		uint cpuCount = ParseUint(model, "cpu_count");
 		uint memory = ParseUint(model, "memory");
@@ -75,6 +76,7 @@ internal class TomlParser : IParser
 
 		return new RunSettings(
 			dryRun,
+			runLocal,
 			outputDirectory,
 			guessPath,
 			inputModule,
@@ -140,7 +142,11 @@ internal class TomlParser : IParser
 	private IReadOnlyCollection<string> ParseStringArray(TomlTable model, string keyName, bool optional = false)
 	{
 		if (!model.ContainsKey(keyName))
+		{
+			if (optional)
+				return Array.Empty<string>();
 			throw new InvalidOperationException(VarNotSet(keyName));
+		}
 
 		// TBI - add support for scalar as single-element list.
 		if ( !(model[keyName] is TomlArray array) )

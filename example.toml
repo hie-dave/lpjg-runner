@@ -16,20 +16,20 @@ guess_path = "/path/to/guess"
 # Input module to be used by LPJ-Guess.
 input_module = "nc"
 
-# Number of CPUs to be allocated to each run. When running locally, this is the
-# max number of CPUs to be used in total.
-cpu_count = 1
-
 # Base name of all jobs. Each factorial will have a unique suffix appended to
 # this name. Outputs will be saved in ${output_directory}/${job_name}/
 job_name = "example"
 
-# True to run locally, false to submit to PBS.
+# True to run locally, false to submit to PBS. This will run all simulations in
+# parallel.
 run_local = true
 
 ################################################################################
 # PBS Settings - Optional when run_local is true
 ################################################################################
+
+# Number of CPUs to be allocated to each run. Only used in PBS mode.
+cpu_count = 1
 
 # Maximum amount of walltime for each run.
 walltime = "01:00:00"

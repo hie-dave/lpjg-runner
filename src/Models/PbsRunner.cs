@@ -108,8 +108,6 @@ public class PbsRunner : IRunner
 			// to overwrite files from a previous run, so let's force them to be
 			// explcit about what they want.
 			string actualOutDir = Path.Combine(outPath, factName);
-			if (Directory.Exists(actualOutDir))
-				throw new InvalidOperationException($"Output directory '{actualOutDir}' already exists. Please change the output location or delete the existing directory.");
 
 			using (Stream stream = File.OpenWrite(confFile))
 			using (TextWriter writer = new StreamWriter(stream))

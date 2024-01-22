@@ -25,4 +25,12 @@ public class Factor
 		Name = name;
 		Value = value;
 	}
+
+	/// <summary>
+	/// Get a unique identifier for this factor.
+	/// </sumary>
+	public string GetName()
+	{
+		return $"{Name}_{Path.GetFileNameWithoutExtension(Value)}";
+	}
 }

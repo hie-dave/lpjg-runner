@@ -25,6 +25,6 @@ public class Factorial
 	/// </summary>
 	public string GetName()
 	{
-		return string.Join("-", Factors.Select(f => $"{f.Name}_{f.Value}"));
+		return string.Join("-", Factors.Select(f => f.GetName()));
 	}
 }

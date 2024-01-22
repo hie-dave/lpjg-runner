@@ -31,6 +31,14 @@ public class Factor
 	/// </sumary>
 	public string GetName()
 	{
-		return $"{Name}_{Path.GetFileNameWithoutExtension(Value)}";
+		return $"{Name}_{GetShortName()}";
+	}
+
+	/// <summary>
+	/// Get a non-unique identifier for this factor.
+	/// </summary>
+	public string GetShortName()
+	{
+		return Path.GetFileNameWithoutExtension(Value);
 	}
 }

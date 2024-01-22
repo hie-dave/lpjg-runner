@@ -25,6 +25,8 @@ public class Factorial
 	/// </summary>
 	public string GetName()
 	{
+		if (Factors.Count == 1)
+			return Factors.First().GetShortName();
 		return string.Join("-", Factors.Select(f => f.GetName()));
 	}
 }

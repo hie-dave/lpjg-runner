@@ -93,7 +93,9 @@ public class Instructions
 	{
 		// Apply changes from this factorial.
 		ct.ThrowIfCancellationRequested();
-		string jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{factorial.GetName()}";
+		string jobName = factorial.GetName();
+		if (InsFiles.Count > 1)
+			jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{jobName}";
 		string targetInsFile = ApplyOverrides(factorial, insFile, jobName);
 
 		// Run this factorial (well, submit the job for running).

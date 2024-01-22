@@ -109,7 +109,7 @@ public class PbsRunner : IRunner
 			// explcit about what they want.
 			string actualOutDir = Path.Combine(outPath, factName);
 
-			using (Stream stream = File.OpenWrite(confFile))
+			using (Stream stream = File.Open(confFile, FileMode.Create))
 			using (TextWriter writer = new StreamWriter(stream))
 			{
 				await Write(writer, binary, settings.GuessPath);

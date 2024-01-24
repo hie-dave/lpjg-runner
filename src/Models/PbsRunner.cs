@@ -98,7 +98,7 @@ public class PbsRunner : IRunner
 			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
 			// This is the OUTPUT_DIR we pass to the submit script.
-			string outPath = Path.Combine(settings.OutputDirectory, settings.JobName);
+			string outPath = Path.Combine(settings.OutputDirectory);
 			if (!Directory.Exists(outPath))
 				Directory.CreateDirectory(outPath);
 

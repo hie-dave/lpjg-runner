@@ -127,7 +127,7 @@ public class Instructions
 	{
 		string file = Path.GetFileNameWithoutExtension(insFile);
 		string ext = Path.GetExtension(insFile);
-		string jobDirectory = Path.Combine(Settings.OutputDirectory, Settings.JobName, name);
+		string jobDirectory = Path.Combine(Settings.OutputDirectory, name);
 		string targetInsFile = Path.Combine(jobDirectory, $"{file}-{name}{ext}");
 		Directory.CreateDirectory(jobDirectory);
 

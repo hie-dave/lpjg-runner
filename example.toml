@@ -1,3 +1,5 @@
+# PFTs to be used in the run. This can be omitted to run all PFTs.
+# pfts = ["C3G_perennial", "C4G_perennial"]
 
 # Instruction files to be run.
 insfiles = ["/x.ins", "/y.ins"]

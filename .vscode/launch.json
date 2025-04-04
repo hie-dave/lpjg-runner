@@ -9,9 +9,9 @@
 			"type": "coreclr",
 			"request": "launch",
 			"preLaunchTask": "build",
-			"program": "${workspaceFolder}/src/bin/Debug/net7.0/linux-x64/lpjg-experiment",
+			"program": "${workspaceFolder}/src/bin/Debug/net7.0/lpjg-experiment",
 			"args": [
-				"${workspaceFolder}/example.toml"
+				"${workspaceFolder}/ozflux.toml"
 			],
 			"cwd": "${workspaceFolder}",
 			"stopAtEntry": false,

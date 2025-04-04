@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using Xunit;
 using LpjGuess.Runner.Models;
 
 namespace LpjGuess.Runner.Tests;
@@ -17,11 +14,9 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_ParsesBlockCorrectly()
     {
-        // Arrange
         string content = File.ReadAllText(GetTestFilePath("c3g.ins"));
         var parser = new InstructionFileParser(content);
 
-        // Act & Assert
         var g0Value = parser.GetBlockParameterValue("group", "C3G", "g0");
         Assert.Equal("0.161", g0Value);
 
@@ -35,14 +30,11 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_HandlesExclamationInString()
     {
-        // Arrange
         string content = "group \"test\" (\n    message \"Hello! World!\"\n)";
         var parser = new InstructionFileParser(content);
 
-        // Act
         var messageParam = parser.GetBlockParameter("group", "test", "message");
 
-        // Assert
         Assert.True(messageParam!.IsQuoted);
         Assert.Equal("Hello! World!", messageParam.UnquotedString);
     }
@@ -50,11 +42,9 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_HandlesCommentsCorrectly()
     {
-        // Arrange
         string content = File.ReadAllText(GetTestFilePath("c3g.ins"));
         var parser = new InstructionFileParser(content);
 
-        // Act & Assert
         // These parameters have comments after them
         var tcminSurv = parser.GetBlockParameterValue("group", "C3G", "tcmin_surv");
         Assert.Equal("-1000", tcminSurv);
@@ -66,11 +56,9 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_HandlesMultiValueParameters()
     {
-        // Arrange
         string content = File.ReadAllText(GetTestFilePath("c3g.ins"));
         var parser = new InstructionFileParser(content);
 
-        // Act & Assert
         var epsMonValues = parser.GetBlockParameterValue("group", "C3G", "eps_mon");
         Assert.Equal("0.37 0.2 0.23 0.1 0.1 0.09 0.1 0.22 0.19", epsMonValues);
     }
@@ -78,11 +66,9 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_HandlesDifferentParameterTypes()
     {
-        // Arrange
         string content = File.ReadAllText(GetTestFilePath("c3g.ins"));
         var parser = new InstructionFileParser(content);
 
-        // Act & Assert
         // Test string parameter (quoted)
         var lifeformParam = parser.GetBlockParameter("pft", "C3G_annual", "lifeform");
         Assert.True(lifeformParam!.IsQuoted);
@@ -109,7 +95,6 @@ public class InstructionFileParserTests
     [Fact]
     public void Parse_C3GFile_PreservesContentExactly()
     {
-        // Arrange
         string content = @"!///////////////////////////////////////////////////////////////////////////////
 ! C3 grass PFT settings
 !///////////////////////////////////////////////////////////////////////////////
@@ -131,10 +116,8 @@ sla 53.1
 
         var parser = new InstructionFileParser(content);
 
-        // Act
         string generatedContent = parser.GenerateContent();
 
-        // Assert
         // Compare line by line to preserve exact whitespace and comments
         var originalLines = content.Split('\n');
         var generatedLines = generatedContent.Split('\n');
@@ -149,7 +132,6 @@ sla 53.1
     [Fact]
     public void Parse_C3GFile_ModifiesParametersCorrectly()
     {
-        // Arrange
         string content = @"group ""C3G"" (
 g0 0.161
 pathway ""c3""
@@ -162,13 +144,11 @@ sla 53.1
 
         var parser = new InstructionFileParser(content);
 
-        // Act
         // Modify some parameters
         parser.SetBlockParameterValue("group", "C3G", "g0", "0.2");
         parser.SetBlockParameterValue("pft", "C3G_annual", "sla", "60.0");
         string generatedContent = parser.GenerateContent();
 
-        // Assert
         var newParser = new InstructionFileParser(generatedContent);
         
         // Check modified values
@@ -191,7 +171,6 @@ sla 53.1
     [Fact]
     public void Parse_DuplicateParameters_HandlesCorrectly()
     {
-        // Arrange
         string content = @"group ""C3G"" (
 g0 0.161     ! initial value
 pathway ""c3""
@@ -206,7 +185,6 @@ sla 53.1     ! override value
 
         var parser = new InstructionFileParser(content);
 
-        // Act & Assert
         // 1. Verify GetBlockParameter returns the last-defined value
         var g0Value = parser.GetBlockParameter("group", "C3G", "g0");
         Assert.True(g0Value!.TryGetDouble(out double g0));
@@ -248,7 +226,6 @@ sla 53.1     ! override value
     [Fact]
     public void Parse_AddNewParameter_AddsAtEndOfBlock()
     {
-        // Arrange
         string content = @"group ""C3G"" (
 g0 0.161     ! initial value
 pathway ""c3""
@@ -261,13 +238,11 @@ sla 53.1
 
         var parser = new InstructionFileParser(content);
 
-        // Act
         // Add new parameters to both blocks
         parser.SetBlockParameterValue("group", "C3G", "newparam", "42");
         parser.SetBlockParameterValue("pft", "C3G_annual", "newparam2", "\"test value\"");
         string generatedContent = parser.GenerateContent();
 
-        // Assert
         var newParser = new InstructionFileParser(generatedContent);
         
         // Check that the new parameters were added with correct values

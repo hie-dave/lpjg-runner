@@ -17,7 +17,7 @@
 				"isDefault": true
 			},
 			"options": {
-				"cwd": "${workspaceRoot}/src"
+				"cwd": "${workspaceRoot}"
 			},
 			"presentation": {
 				"reveal": "silent"

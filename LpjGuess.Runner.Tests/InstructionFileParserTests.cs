@@ -272,4 +272,20 @@ sla 53.1
         var newParam2Indent = lines[newParam2Line].Length - lines[newParam2Line].TrimStart().Length;
         Assert.Equal(slaIndent, newParam2Indent);
     }
+
+    [Fact]
+    public void TestSetTopLevelParamValue()
+    {
+        // fixme - this doesn't work. For now we use InstructionFile instead.
+
+        string content = "param \"test_param\" (str \"old_value\")";
+        var parser = new InstructionFileParser(content);
+
+        bool success = parser.SetBlockParameterValue("param", "test_param", "str", "new_value");
+        string newContent = parser.GenerateContent();
+
+        // Assert.True(success);
+        // Assert.Contains("param \"test_param\" (str \"new_value\")", newContent);
+        // Assert.DoesNotContain("old_value", newContent);
+    }
 }

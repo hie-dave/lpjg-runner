@@ -458,4 +458,18 @@ public class InstructionFileParser
 
         return content.ToString();
     }
+
+    /// <summary>
+    /// Return the type of the specified block.
+    /// </summary>
+    /// <remarks>
+    /// "TeBE" -> "pft"
+    /// "tree" -> "group"
+    /// </remarks>
+    /// <param name="blockName"></param>
+    /// <returns></returns>
+    public string? FindBlock(string blockName)
+    {
+        return _blocks.FirstOrDefault(b => b.Name == blockName)?.Type;
+    }
 }

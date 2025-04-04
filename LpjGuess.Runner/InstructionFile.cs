@@ -1,5 +1,10 @@
+using System.Runtime.CompilerServices;
+using System.ComponentModel.Design.Serialization;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using LpjGuess.Runner.Models;
+
+[assembly: InternalsVisibleTo("LpjGuess.Runner.Tests")]
 
 namespace LpjGuess.Runner;
 
@@ -17,10 +22,7 @@ public class InstructionFile
 	/// </summary>
 	public string Path { get; private init; }
 
-	/// <summary>
-	/// File contents.
-	/// </summary>
-	private string contents;
+	private readonly InstructionFileParser parser;
 
 	/// <summary>
 	/// Create a new <see cref="InstructionFile"/> instance.
@@ -29,13 +31,18 @@ public class InstructionFile
 	public InstructionFile(string path)
 	{
 		Path = path;
-		contents = File.ReadAllText(path);
+		string contents = File.ReadAllText(path);
+
+		contents = Flatten(contents);
+		contents = ConvertToAbsolutePaths(contents);
+
+		parser = new InstructionFileParser(contents);
 	}
 
 	/// <summary>
 	/// Copy the text of all imported .ins files, recursively, into this file.
 	/// </summary>
-	public void Flatten()
+	private string Flatten(string contents)
 	{
 		string pattern = $@"^[ \t]*import[ \t]+""([^""]+)"".*\n";
 		RegexOptions opts = RegexOptions.Multiline;
@@ -45,10 +52,10 @@ public class InstructionFile
 			string file = match.Groups[1].Value;
 			string absolutePath = GetAbsolutePath(file);
 			InstructionFile ins = new InstructionFile(absolutePath);
-			ins.Flatten();
 			contents = contents.Remove(match.Index, match.Length);
 			contents = contents.Insert(match.Index, ins.Read());
 		}
+		return contents;
 	}
 
     private string GetAbsolutePath(string file)
@@ -63,7 +70,7 @@ public class InstructionFile
     /// <summary>
     /// Change any relative paths to absolute paths.
     /// </summary>
-    public void ConvertToAbsolutePaths()
+    private string ConvertToAbsolutePaths(string contents)
 	{
 		string[] parameters = new[]
 		{
@@ -78,20 +85,21 @@ public class InstructionFile
 		};
 		foreach (string parameter in parameters)
 		{
-			string? value = TryGetParameterValue(parameter);
+			string? value = TryGetParameterValue(parameter, contents);
 			if (value == null)
 				continue;
 			string absolute = GetAbsolutePath(value);
-			SetParameterValue(parameter, absolute);
+			contents = SetParameterValue(parameter, absolute, contents);
 		}
 		foreach (string parameter in paramsToFix)
 		{
-			string? value = TryGetParamValue(parameter);
+			string? value = TryGetParamValue(parameter, contents);
 			if (value == null)
 				continue;
 			string absolute = GetAbsolutePath(value);
-			SetParamValue(parameter, absolute);
+			contents = SetParamValue(parameter, absolute, contents);
 		}
+		return contents;
 	}
 
 	/// <summary>
@@ -99,9 +107,9 @@ public class InstructionFile
 	/// not exist.
 	/// </summary>
 	/// <param name="name">Param name.</param>
-	private string GetParamValue(string name)
+	internal string GetParamValue(string name, string contents)
 	{
-		string? result = TryGetParamValue(name);
+		string? result = TryGetParamValue(name, contents);
 		if (result == null)
 			throw new InvalidOperationException(ParameterDoesNotExist(name));
 		return result;
@@ -112,7 +120,7 @@ public class InstructionFile
 	/// not exist, return null.
 	/// </summary>
 	/// <param name="name">Name of the param.</param>
-	private string? TryGetParamValue(string name)
+	internal string? TryGetParamValue(string name, string contents)
 	{
 		RegexOptions opts = RegexOptions.Multiline;
 		string pattern = GetParamRegex(name);
@@ -127,12 +135,12 @@ public class InstructionFile
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
 	/// <param name="value">New value of the parameter.</param>
-	private void SetParamValue(string name, string value)
+	internal string SetParamValue(string name, string value, string contents)
 	{
-		string previousValue = GetParamValue(name);
+		string previousValue = GetParamValue(name, contents);
 		if (string.Equals(value, previousValue))
 			// Parameter already has this value.
-			return;
+			return contents;
 
 		RegexOptions opts = RegexOptions.Multiline;
 		string pattern = GetParamRegex(name);
@@ -140,7 +148,7 @@ public class InstructionFile
 		string newBuf = Regex.Replace(contents, pattern, repl, opts);
 		if (string.Equals(newBuf, contents))
 			throw new InvalidOperationException($"Unable to modify '{name}' param (replacement failed)");
-		contents = newBuf;
+		return newBuf;
 	}
 
 	/// <summary>
@@ -161,9 +169,9 @@ public class InstructionFile
 	/// Get a parameter value in the instruction file. Throw if not found.
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
-	private string GetParameterValue(string name)
+	private string GetParameterValue(string name, string contents)
 	{
-		string? result = TryGetParameterValue(name);
+		string? result = TryGetParameterValue(name, contents);
 		if (result == null)
 			throw new InvalidOperationException(ParameterDoesNotExist(name));
 		return result;
@@ -174,7 +182,7 @@ public class InstructionFile
 	/// not exist, return null.
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
-	private string? TryGetParameterValue(string name)
+	internal string? TryGetParameterValue(string name, string contents)
 	{
 		RegexOptions opts = RegexOptions.Multiline;
 		string pattern = GetParameterRegex(name);
@@ -189,12 +197,12 @@ public class InstructionFile
 	/// </summary>
 	/// <param name="name">Parameter name.</param>
 	/// <param name="value">Parameter value.</param>
-	private void SetParameterValue(string name, string value)
+	private string SetParameterValue(string name, string value, string contents)
 	{
-		string previousValue = GetParameterValue(name);
+		string previousValue = GetParameterValue(name, contents);
 		if (string.Equals(value, previousValue))
 			// Nothing to do - parameter already has this value.
-			return;
+			return contents;
 		RegexOptions opts = RegexOptions.Multiline;
 		string pattern = GetParameterRegex(name);
 		string repl = $@"${{1}}{value}${{3}}";
@@ -202,7 +210,7 @@ public class InstructionFile
 		string replaced = Regex.Replace(contents, pattern, repl, opts);
 		if (string.Equals(replaced, contents))
 			throw new InvalidOperationException(ParameterDoesNotExist(name));
-		contents = replaced;
+		return replaced;
 	}
 
 	/// <summary>
@@ -235,7 +243,22 @@ public class InstructionFile
 	/// <param name="factor">The parameter name and new value.</param>
 	public void ApplyChange(Factor factor)
 	{
-		SetParameterValue(factor.Name, factor.Value);
+		const char sep = '.';
+		if (!factor.Name.Contains(sep))
+			// SetParameterValue(factor.Name, factor.Value);
+			parser.SetTopLevelParameterValue(factor.Name, factor.Value);
+		else
+		{
+			string[] parts = factor.Name.Split(sep);
+			if (parts.Length != 2)
+				throw new ArgumentException($"If a parameter name contains a period, it must be of the form: block.param. E.g. TeBE.sla. Parameter name: {factor.Name}");
+			string blockName = parts[0];
+			string paramName = parts[1];
+			var blockType = parser.FindBlock(blockName);
+			if (blockType == null)
+				throw new ArgumentException($"No block found with name: {blockName} for parameter '{factor.Name}'");
+			parser.SetBlockParameterValue(blockType, blockName, paramName, factor.Value);
+		}
 	}
 
 	/// <summary>
@@ -243,7 +266,7 @@ public class InstructionFile
 	/// </summary>
 	public string Read()
 	{
-		return contents;
+		return parser.GenerateContent();
 	}
 
 	/// <summary>
@@ -251,6 +274,6 @@ public class InstructionFile
 	/// </summary>
 	public void SaveChanges(string destination)
 	{
-		File.WriteAllText(destination, contents);
+		File.WriteAllText(destination, Read());
 	}
 }

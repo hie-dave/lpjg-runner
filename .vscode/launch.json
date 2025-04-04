@@ -9,7 +9,7 @@
 			"type": "coreclr",
 			"request": "launch",
 			"preLaunchTask": "build",
-			"program": "${workspaceFolder}/src/bin/Debug/net7.0/lpjg-experiment",
+			"program": "${workspaceFolder}/LpjGuess.Runner/bin/Debug/net7.0/lpjg-experiment",
 			"args": [
 				"${workspaceFolder}/ozflux.toml"
 			],

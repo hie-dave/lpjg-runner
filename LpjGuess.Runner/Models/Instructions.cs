@@ -134,8 +134,6 @@ public class Instructions
 		try
 		{
 			InstructionFile ins = new InstructionFile(insFile);
-			ins.Flatten();
-			ins.ConvertToAbsolutePaths();
 
 			// Apply changes to the instruction file as required.
 			foreach (Factor factor in factorial.Factors)

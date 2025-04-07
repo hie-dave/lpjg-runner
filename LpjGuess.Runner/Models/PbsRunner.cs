@@ -35,12 +35,20 @@ public class PbsRunner : IRunner
         this.settings = settings;
     }
 
+    public event EventHandler<ProgressEventArgs>? ProgressChanged;
+
     /// <inheritdoc />
-    public async Task Run(string insFile, CancellationToken ct)
+    public async Task RunAsync(Job job, CancellationToken ct)
     {
 		try
 		{
-			string confFile = await GenerateConfFile(insFile, jobName);
+			ProgressChanged?.Invoke(this, new ProgressEventArgs()
+			{
+				Percentage = 0,
+				JobName = job.Name
+			});
+
+			string confFile = await GenerateConfFile(job.InsFile, jobName);
 			ct.ThrowIfCancellationRequested();
 
 			using (Process proc = new Process())
@@ -58,6 +66,12 @@ public class PbsRunner : IRunner
 				if (ct.IsCancellationRequested && !proc.HasExited)
 					proc.Kill();
 				ct.ThrowIfCancellationRequested();
+
+				ProgressChanged?.Invoke(this, new ProgressEventArgs()
+				{
+					Percentage = 100,
+					JobName = job.Name
+				});
 			}
 		}
 		catch (OperationCanceledException)
@@ -66,7 +80,7 @@ public class PbsRunner : IRunner
 		}
 		catch (Exception error)
 		{
-			throw new Exception($"Failed to run submit script for .ins file '{insFile}'", error);
+			throw new Exception($"Failed to run submit script for .ins file '{job.InsFile}'", error);
 		}
     }
 

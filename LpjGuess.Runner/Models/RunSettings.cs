@@ -6,6 +6,11 @@ namespace LpjGuess.Runner.Models;
 public class RunSettings
 {
 	/// <summary>
+	/// Iff true, the processing code will be executed in parallel.
+	/// </summary>
+	public bool ParallelProcessing { get; private init; }
+
+	/// <summary>
 	/// Iff true, the run directory will be created but the job will not be
 	/// submitted.
 	/// </summary>

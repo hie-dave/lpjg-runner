@@ -27,10 +27,10 @@ public class InstructionFileTests : IDisposable
         File.WriteAllText(_testFilePath, "param \"file_met_forcing\" (str \"meteo.nc\")");
 
         // Act
-        var instructionFile = new InstructionFile(_testFilePath);
+        var instructionFile = new InstructionFileNormaliser(_testFilePath);
 
         // Assert
-        Assert.Equal(_testFilePath, instructionFile.Path);
+        Assert.Equal(_testFilePath, instructionFile.FilePath);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class InstructionFileTests : IDisposable
         var nonExistentPath = Path.Combine(Path.GetTempPath(), "nonexistent.ins");
 
         // Act & Assert
-        Assert.Throws<FileNotFoundException>(() => new InstructionFile(nonExistentPath));
+        Assert.Throws<FileNotFoundException>(() => new InstructionFileNormaliser(nonExistentPath));
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class InstructionFileTests : IDisposable
     {
         // Arrange
         File.WriteAllText(_testFilePath, "param \"test_param\" (str \"test_value\")");
-        var instructionFile = new InstructionFile(_testFilePath);
+        var instructionFile = new InstructionFileNormaliser(_testFilePath);
 
         // Act
         var value = instructionFile.GetParamValue("test_param", File.ReadAllText(_testFilePath));
@@ -62,7 +62,7 @@ public class InstructionFileTests : IDisposable
     {
         // Arrange
         File.WriteAllText(_testFilePath, "param \"test_param\" (str \"test_value\")");
-        var instructionFile = new InstructionFile(_testFilePath);
+        var instructionFile = new InstructionFileNormaliser(_testFilePath);
 
         // Act
         var value = instructionFile.TryGetParamValue("missing_param", File.ReadAllText(_testFilePath));
@@ -76,7 +76,7 @@ public class InstructionFileTests : IDisposable
     {
         // Arrange
         File.WriteAllText(_testFilePath, "param \"test_param\" (str \"old_value\")");
-        var instructionFile = new InstructionFile(_testFilePath);
+        var instructionFile = new InstructionFileNormaliser(_testFilePath);
         var contents = File.ReadAllText(_testFilePath);
 
         // Act

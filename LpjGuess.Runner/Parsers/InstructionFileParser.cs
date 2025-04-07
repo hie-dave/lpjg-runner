@@ -1,6 +1,8 @@
 using System.Text;
+using LpjGuess.Runner.Extensions;
+using LpjGuess.Runner.Models;
 
-namespace LpjGuess.Runner.Models;
+namespace LpjGuess.Runner.Parsers;
 
 /// <summary>
 /// Parser for LPJ-GUESS instruction files that handles nested blocks, parameters, and comments.
@@ -55,7 +57,7 @@ public class InstructionFileParser
         _blocks = new List<Block>();
         _topLevelParams = new Dictionary<string, InstructionParameter>();
         _currentLine = 0;
-        
+
         // Ensure we preserve the exact line endings from original content
         if (content.EndsWith("\r\n"))
             _lineEnding = "\r\n";
@@ -65,6 +67,12 @@ public class InstructionFileParser
             _lineEnding = "\n"; // Default
         
         Parse();
+    }
+
+    public static InstructionFileParser FromFile(string path)
+    {
+        string contents = InstructionFileNormaliser.Normalise(path);
+        return new InstructionFileParser(contents);
     }
 
     private void Parse()
@@ -77,7 +85,7 @@ public class InstructionFileParser
         {
             string currentLine = _lines[_currentLine];
             string trimmedCurrentLine = currentLine.Trim();
-            
+
             if (IsBlockStart(trimmedCurrentLine, out string blockType, out string blockName))
             {
                 var block = new Block(blockType, blockName, _currentLine);
@@ -142,6 +150,9 @@ public class InstructionFileParser
     {
         blockType = string.Empty;
         blockName = string.Empty;
+
+        // Replace everything after a comment character, if one is present.
+        line = line.SplitHonouringQuotes(['!']).First();
 
         // Match patterns like: group "C3G" ( or pft "TeBE" (
         var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
@@ -289,6 +300,30 @@ public class InstructionFileParser
     {
         return GetTopLevelParameter(paramName)?.AsString();
     }
+
+	/// <summary>
+	/// Change a parameter in the instruction file.
+	/// </summary>
+	/// <param name="factor">The parameter name and new value.</param>
+	public void ApplyChange(Factor factor)
+	{
+		const char sep = '.';
+		if (!factor.Name.Contains(sep))
+			// SetParameterValue(factor.Name, factor.Value);
+			SetTopLevelParameterValue(factor.Name, factor.Value);
+		else
+		{
+			string[] parts = factor.Name.Split(sep);
+			if (parts.Length != 2)
+				throw new ArgumentException($"If a parameter name contains a period, it must be of the form: block.param. E.g. TeBE.sla. Parameter name: {factor.Name}");
+			string blockName = parts[0];
+			string paramName = parts[1];
+			string? blockType = _blocks.FirstOrDefault(b => b.Name == blockName)?.Type;
+			if (blockType == null)
+				throw new ArgumentException($"No block found with name: {blockName} for parameter '{factor.Name}'");
+			SetBlockParameterValue(blockType, blockName, paramName, factor.Value);
+		}
+	}
 
     /// <summary>
     /// Sets a parameter value within a specific block.
@@ -457,19 +492,5 @@ public class InstructionFileParser
         }
 
         return content.ToString();
-    }
-
-    /// <summary>
-    /// Return the type of the specified block.
-    /// </summary>
-    /// <remarks>
-    /// "TeBE" -> "pft"
-    /// "tree" -> "group"
-    /// </remarks>
-    /// <param name="blockName"></param>
-    /// <returns></returns>
-    public string? FindBlock(string blockName)
-    {
-        return _blocks.FirstOrDefault(b => b.Name == blockName)?.Type;
     }
 }

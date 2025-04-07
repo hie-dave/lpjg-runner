@@ -1,4 +1,5 @@
 using LpjGuess.Runner.Models;
+using LpjGuess.Runner.Parsers;
 
 namespace LpjGuess.Runner.Tests;
 
@@ -221,6 +222,40 @@ sla 53.1     ! override value
         Assert.Contains(lines, l => l.TrimStart().StartsWith("g0 0.300"));
         Assert.Contains(lines, l => l.TrimStart().StartsWith("sla 45.0"));
         Assert.Contains(lines, l => l.TrimStart().StartsWith("sla 60.0"));
+    }
+
+    [Fact]
+    public void Parse_StartBlock_DetectsComment()
+    {
+
+        string content = @"
+!st ""Urban"" (
+
+	common_stand
+	stinclude 1
+	landcover ""urban""
+!)";
+        InstructionFileParser parser = new(content);
+        Assert.Null(parser.GetBlockParameter("st", "Urban", "stinclude"));
+        Assert.Null(parser.GetBlockParameter("!st", "Urban", "stinclude"));
+    }
+
+    [Fact]
+    public void Parse_IgnoresCommentedParameters()
+    {
+
+        string content = @"
+st ""Urban"" (
+
+	common_stand
+	!stinclude 1
+	landcover ""urban""
+)
+
+!npatch 3";
+        InstructionFileParser parser = new(content);
+        Assert.Null(parser.GetBlockParameter("st", "Urban", "stinclude"));
+        Assert.Null(parser.GetTopLevelParameter("npatch"));
     }
 
     [Fact]

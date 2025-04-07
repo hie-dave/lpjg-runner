@@ -1,6 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.ComponentModel.Design.Serialization;
-using System.Globalization;
 using System.Text.RegularExpressions;
 using LpjGuess.Runner.Models;
 
@@ -15,91 +13,122 @@ namespace LpjGuess.Runner;
 /// This is really quick and dirty. This really should be improved because
 /// performance is not going to be great here.
 /// </remarks>
-public class InstructionFile
+public class InstructionFileNormaliser
 {
 	/// <summary>
 	/// Path to the input file.
 	/// </summary>
-	public string Path { get; private init; }
+	public string FilePath { get; private init; }
 
-	private readonly InstructionFileParser parser;
+	private string rawContent;
 
 	/// <summary>
-	/// Create a new <see cref="InstructionFile"/> instance.
+	/// Create a new <see cref="InstructionFileNormaliser"/> instance.
 	/// </summary>
 	/// <param name="path">Path to the instruction file.</param>
-	public InstructionFile(string path)
+	internal InstructionFileNormaliser(string path)
 	{
-		Path = path;
-		string contents = File.ReadAllText(path);
+		FilePath = path;
+		rawContent = File.ReadAllText(path);
+	}
 
-		contents = Flatten(contents);
-		contents = ConvertToAbsolutePaths(contents);
-
-		parser = new InstructionFileParser(contents);
+	/// <summary>
+	/// Normalise the instruction file at the specified path and return the
+	/// contents of the normalised file.
+	/// </summary>
+	/// <remarks>
+	/// Normalisation consists of:
+	/// 
+	/// - Flattening the import hierarchy, recursively
+	/// - Converting all relative paths to absolute paths
+	/// </remarks>
+	/// <param name="path">Path to the instruction file.</param>
+	/// <returns>Contents of the normalised file.</returns>
+	public static string Normalise(string path)
+	{
+		InstructionFileNormaliser ins = new(path);
+		ins.Flatten();
+		ins.ConvertToAbsolutePaths();
+		return ins.Read();
 	}
 
 	/// <summary>
 	/// Copy the text of all imported .ins files, recursively, into this file.
 	/// </summary>
-	private string Flatten(string contents)
+	/// <returns>Contents of the flattened file.</returns>
+	private void Flatten()
 	{
 		string pattern = $@"^[ \t]*import[ \t]+""([^""]+)"".*\n";
 		RegexOptions opts = RegexOptions.Multiline;
 		Match match;
-		while ( (match = Regex.Match(contents, pattern, opts)) != Match.Empty)
+		while ( (match = Regex.Match(rawContent, pattern, opts)) != Match.Empty)
 		{
 			string file = match.Groups[1].Value;
 			string absolutePath = GetAbsolutePath(file);
-			InstructionFile ins = new InstructionFile(absolutePath);
-			contents = contents.Remove(match.Index, match.Length);
-			contents = contents.Insert(match.Index, ins.Read());
+			rawContent = rawContent.Remove(match.Index, match.Length);
+			InstructionFileNormaliser normaliser = new(absolutePath);
+			normaliser.Flatten();
+			rawContent = rawContent.Insert(match.Index, normaliser.Read());
 		}
-		return contents;
 	}
 
+	/// <summary>
+	/// Get the absolute path of a file.
+	/// </summary>
+	/// <param name="file">Path to the file.</param>
+	/// <returns>Path to the file, absolute.</returns>
     private string GetAbsolutePath(string file)
     {
-		if (System.IO.Path.IsPathRooted(file))
+		if (Path.IsPathRooted(file))
 			return file;
 
-        string relative = System.IO.Path.GetDirectoryName(Path) ?? Directory.GetCurrentDirectory();
-		return System.IO.Path.GetFullPath(file, relative);
+        string relative = Path.GetDirectoryName(FilePath) ?? Directory.GetCurrentDirectory();
+		return Path.GetFullPath(file, relative);
     }
 
     /// <summary>
     /// Change any relative paths to absolute paths.
     /// </summary>
-    private string ConvertToAbsolutePaths(string contents)
+    /// <param name="contents">Contents of the instruction file.</param>
+    /// <returns>Contents of the file with absolute paths.</returns>
+    private void ConvertToAbsolutePaths()
 	{
 		string[] parameters = new[]
 		{
 			"file_met_forcing",
+			"file_met_spinup",
 			"file_gridlist",
 			"file_soildata",
+			"file_co2"
 		};
 		string[] paramsToFix = new[]
 		{
 			"file_soildata",
 			"file_ndep"
 		};
+		// TODO: add support for CF input? Would need to add params like
+		// file_temp, file_prec, file_insol, etc.
 		foreach (string parameter in parameters)
 		{
-			string? value = TryGetParameterValue(parameter, contents);
+			string? value = TryGetParameterValue(parameter, rawContent);
 			if (value == null)
 				continue;
 			string absolute = GetAbsolutePath(value);
-			contents = SetParameterValue(parameter, absolute, contents);
+			rawContent = SetParameterValue(parameter, absolute, rawContent);
 		}
 		foreach (string parameter in paramsToFix)
 		{
-			string? value = TryGetParamValue(parameter, contents);
+			string? value = TryGetParamValue(parameter, rawContent);
 			if (value == null)
 				continue;
 			string absolute = GetAbsolutePath(value);
-			contents = SetParamValue(parameter, absolute, contents);
+			rawContent = SetParamValue(parameter, absolute, rawContent);
 		}
-		return contents;
+	}
+
+	internal string Read()
+	{
+		return rawContent;
 	}
 
 	/// <summary>
@@ -107,6 +136,9 @@ public class InstructionFile
 	/// not exist.
 	/// </summary>
 	/// <param name="name">Param name.</param>
+	/// <param name="contents">Contents of the instruction file.</param>
+	/// <returns>Value of the param.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the param does not exist.</exception>
 	internal string GetParamValue(string name, string contents)
 	{
 		string? result = TryGetParamValue(name, contents);
@@ -120,6 +152,8 @@ public class InstructionFile
 	/// not exist, return null.
 	/// </summary>
 	/// <param name="name">Name of the param.</param>
+	/// <param name="contents">Contents of the instruction file.</param>
+	/// <returns>Value of the param, or null if it does not exist.</returns>
 	internal string? TryGetParamValue(string name, string contents)
 	{
 		RegexOptions opts = RegexOptions.Multiline;
@@ -158,9 +192,9 @@ public class InstructionFile
 	/// 2. The value.
 	/// 3. Everything after the value.
 	/// </summary>
-	/// <param name="name"></param>
-	/// <returns></returns>
-	private string GetParamRegex(string name)
+	/// <param name="name">Name of the parameter.</param>
+	/// <returns>Regex pattern for matching the parameter.</returns>
+	private static string GetParamRegex(string name)
 	{
 		return $@"^([ \t]*param[ \t]+""{name}""[ \t]+\(str[ \t]+"")([^""]+)(""\).*)";
 	}
@@ -169,6 +203,9 @@ public class InstructionFile
 	/// Get a parameter value in the instruction file. Throw if not found.
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
+	/// <param name="contents">Contents of the instruction file.</param>
+	/// <returns>Value of the parameter.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the parameter does not exist.</exception>
 	private string GetParameterValue(string name, string contents)
 	{
 		string? result = TryGetParameterValue(name, contents);
@@ -182,6 +219,8 @@ public class InstructionFile
 	/// not exist, return null.
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
+	/// <param name="contents">Contents of the instruction file.</param>
+	/// <returns>Value of the parameter, or null if it does not exist.</returns>
 	internal string? TryGetParameterValue(string name, string contents)
 	{
 		RegexOptions opts = RegexOptions.Multiline;
@@ -197,6 +236,9 @@ public class InstructionFile
 	/// </summary>
 	/// <param name="name">Parameter name.</param>
 	/// <param name="value">Parameter value.</param>
+	/// <param name="contents">Contents of the instruction file.</param>
+	/// <returns>Contents of the instruction file with the parameter changed.</returns>
+	/// <exception cref="InvalidOperationException">Thrown if the parameter does not exist.</exception>
 	private string SetParameterValue(string name, string value, string contents)
 	{
 		string previousValue = GetParameterValue(name, contents);
@@ -222,6 +264,7 @@ public class InstructionFile
 	/// 3. Everything after the parameter value.
 	/// </summary>
 	/// <param name="name">Name of the parameter.</param>
+	/// <returns>Regex pattern for matching the parameter.</returns>
 	private string GetParameterRegex(string name)
 	{
 		return $@"^([ \t]*{name}[ \t]+""?)((?:[ \t]*[^!"" \n])+)(""?[ \t]*[^\n]*)?$";
@@ -232,48 +275,9 @@ public class InstructionFile
 	/// parameter.
 	/// </summary>
 	/// <param name="name">Parameter name.</param>
+	/// <returns>Error message.</returns>
 	private string? ParameterDoesNotExist(string name)
 	{
 		return $"Parameter '{name}' does not exist";
-	}
-
-	/// <summary>
-	/// Change a parameter in the instruction file.
-	/// </summary>
-	/// <param name="factor">The parameter name and new value.</param>
-	public void ApplyChange(Factor factor)
-	{
-		const char sep = '.';
-		if (!factor.Name.Contains(sep))
-			// SetParameterValue(factor.Name, factor.Value);
-			parser.SetTopLevelParameterValue(factor.Name, factor.Value);
-		else
-		{
-			string[] parts = factor.Name.Split(sep);
-			if (parts.Length != 2)
-				throw new ArgumentException($"If a parameter name contains a period, it must be of the form: block.param. E.g. TeBE.sla. Parameter name: {factor.Name}");
-			string blockName = parts[0];
-			string paramName = parts[1];
-			var blockType = parser.FindBlock(blockName);
-			if (blockType == null)
-				throw new ArgumentException($"No block found with name: {blockName} for parameter '{factor.Name}'");
-			parser.SetBlockParameterValue(blockType, blockName, paramName, factor.Value);
-		}
-	}
-
-	/// <summary>
-	/// Read the contents of the instruction file.
-	/// </summary>
-	public string Read()
-	{
-		return parser.GenerateContent();
-	}
-
-	/// <summary>
-	/// Save any pending changes to disk.
-	/// </summary>
-	public void SaveChanges(string destination)
-	{
-		File.WriteAllText(destination, Read());
 	}
 }

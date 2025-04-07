@@ -55,6 +55,7 @@ internal class TomlParser : IParser
 
 	private RunSettings ParseRunSettings(TomlTable model)
 	{
+		bool parallel = ParseBool(model, "parallel");
 		bool dryRun = ParseBool(model, "dry_run", optional: true);
 		bool runLocal = ParseBool(model, "run_local");
 
@@ -106,7 +107,13 @@ internal class TomlParser : IParser
 
 		Dictionary<string, List<string>> parameters = new Dictionary<string, List<string>>();
 		foreach ((string key, object value) in section)
-			parameters[key] = ParseStringArray(section, key).ToList();
+		{
+			if (section[key] is TomlTable table)
+				foreach ((string fullKey, List<string> values) in ParseTableOfArrays(table, key))
+					parameters[fullKey] = values;
+			else
+				parameters[key] = ParseStringArray(section, key).ToList();
+		}
 
 		return GetParameters(parameters);
 	}
@@ -128,6 +135,22 @@ internal class TomlParser : IParser
 		// Return all combinations thereof.
 		List<List<Factor>> combinations = factors.AllCombinations();
 		return combinations.Select(c => new Factorial(c)).ToList();
+	}
+
+	private IReadOnlyDictionary<string, List<string>> ParseTableOfArrays(TomlTable table, string keyName)
+	{
+		Dictionary<string, List<string>> data = new();
+
+		foreach (string key in table.Keys)
+		{
+			if (table[key] is TomlArray array)
+			{
+				List<string> values = ParseStringArray(table, key, false).ToList();
+				string fullKey = $"{keyName}.{key}";
+				data[fullKey] = values;
+			}
+		}
+		return data;
 	}
 
 	/// <summary>

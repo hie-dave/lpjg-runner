@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using LpjGuess.Runner.Parsers;
 
 namespace LpjGuess.Runner.Models;
 
@@ -57,12 +58,18 @@ public class Instructions
 	public async Task RunAll(CancellationToken ct)
 	{
 		List<Task> tasks = new List<Task>();
-		Parallel.ForEach(InsFiles, insFile =>
+		Action<string> callback = insFile =>
 		{
 			Task task = RunFile(insFile, ct);
 			lock (tasks)
 				tasks.Add(task);
-		});
+		};
+
+		if (Settings.ParallelProcessing)
+			Parallel.ForEach(InsFiles, callback);
+		else
+			InsFiles.ToList().ForEach(callback);
+
 		foreach (Task task in tasks)
 			await task;
 	}
@@ -78,12 +85,17 @@ public class Instructions
 
 		// Run each factorial one by one.
 		// foreach (Factorial factorial in Factorials)
-		Parallel.ForEach(Factorials, factorial =>
+		Action<Factorial> callback = factorial =>
 		{
 			Task task = RunFactorial(insFile, factorial, ct);
 			lock (tasks)
 				tasks.Add(task);
-		});
+		};
+
+		if (Settings.ParallelProcessing)
+			Parallel.ForEach(Factorials, callback);
+		else
+			Factorials.ToList().ForEach(callback);
 
 		foreach (Task task in tasks)
 			await task;
@@ -133,12 +145,16 @@ public class Instructions
 
 		try
 		{
-			InstructionFile ins = new InstructionFile(insFile);
+			InstructionFileParser ins = InstructionFileParser.FromFile(insFile);
 
 			// Apply changes to the instruction file as required.
 			foreach (Factor factor in factorial.Factors)
 				ins.ApplyChange(factor);
-			ins.SaveChanges(targetInsFile);
+
+			// Save the output file.
+			string content = ins.GenerateContent();
+			File.WriteAllText(targetInsFile, content);
+
 			return targetInsFile;
 		}
 		catch (Exception error)

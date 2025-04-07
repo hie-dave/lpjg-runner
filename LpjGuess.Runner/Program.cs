@@ -26,6 +26,14 @@ Console.CancelKeyPress += (_, args) =>
 
 IEnumerable<Job> jobs = input.GenerateAllJobs(cancellation.Token);
 JobManager jobManager = new JobManager(input.Settings, jobs);
-await jobManager.RunAllAsync(cancellation.Token);
+try
+{
+	await jobManager.RunAllAsync(cancellation.Token);
+}
+catch (ModelException ex)
+{
+	Console.Error.WriteLine(ex.Message);
+	return 1;
+}
 
 return 0;

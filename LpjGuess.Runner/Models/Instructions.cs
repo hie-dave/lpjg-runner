@@ -52,10 +52,10 @@ public class Instructions
 	}
 
 	/// <summary>
-	/// Run all of the factorial simulations.
+	/// Generate all jobs for these instructions.
 	/// </summary>
 	/// <param name="ct">Cancellation token.</param>
-	public async Task RunAllAsync(CancellationToken ct)
+	public IEnumerable<Job> GenerateAllJobs(CancellationToken ct)
 	{
 		IEnumerable<string> query = InsFiles;
 		if (Settings.ParallelProcessing)
@@ -65,19 +65,7 @@ public class Instructions
 						 .WithCancellation(ct);
 		}
 
-		IEnumerable<Job> jobs = query.SelectMany(ins => GenerateJobs(ins, ct));
-		await Parallel.ForEachAsync(
-			jobs,
-			new ParallelOptions
-			{
-				MaxDegreeOfParallelism = Settings.CpuCount,
-				CancellationToken = ct
-			},
-			async (job, ct) =>
-			{
-				IRunner runner = CreateRunner(job.Name);
-				await runner.Run(job.InsFile, ct);
-			});
+		return query.SelectMany(ins => GenerateJobs(ins, ct));
 	}
 
 	/// <summary>
@@ -108,31 +96,11 @@ public class Instructions
 		return new Job(jobName, targetInsFile);
 	}
 
-	/// <summary>
-	/// Report a cleanup failure in such a way that doesn't raise another exception.
-	/// </summary>
-	/// <param name="error">The error.</param>
-	private void CleanupFailure(Exception error, string file)
-	{
-		Console.Error.WriteLine($"WARNING: Failed to clean temporary file: '{file}':");
-		Console.Error.WriteLine(error);
-	}
-
-	/// <summary>
-	/// Apply the specified changes to the instruction file, without modifying
-	/// the original instruction file. Returns the path to a new instruction
-	/// file which contains the changes.
-	/// </summary>
-	/// <param name="factorial">Changes to be applied to the .ins file.</param>
-	/// <param name="insFile">Path to an instruction file.</param>
-	/// <param name="name">Unique name given to this factorial run.</param>
 	private string ApplyOverrides(Factorial factorial, string insFile, string name)
 	{
 		string file = Path.GetFileNameWithoutExtension(insFile);
 		string ext = Path.GetExtension(insFile);
 		string jobDirectory = Settings.OutputDirectory;
-		// Create a more complex file tree when running multiple .ins files
-		// (typically multiple sites) and multiple factorials of each .ins file.
 		if (insFile.Length > 1 && Factorials.Count > 1)
 			jobDirectory = Path.Combine(jobDirectory, file);
 		jobDirectory = Path.Combine(jobDirectory, name);
@@ -143,11 +111,9 @@ public class Instructions
 		{
 			InstructionFileParser ins = InstructionFileParser.FromFile(insFile);
 
-			// Apply changes to the instruction file as required.
 			foreach (Factor factor in factorial.Factors)
 				ins.ApplyChange(factor);
 
-			// Save the output file.
 			string content = ins.GenerateContent();
 			File.WriteAllText(targetInsFile, content);
 
@@ -165,13 +131,12 @@ public class Instructions
 				CleanupFailure(nested, targetInsFile);
 			}
 			throw new Exception($"Failed to apply overrides to file '{insFile}'", error);
-		}	
+		}
 	}
 
-	private IRunner CreateRunner(string jobName)
+	private void CleanupFailure(Exception error, string file)
 	{
-		if (Settings.RunLocal)
-			return new LocalRunner(Settings);
-		return new PbsRunner(jobName, Settings);
+		Console.Error.WriteLine($"WARNING: Failed to clean temporary file: '{file}':");
+		Console.Error.WriteLine(error);
 	}
 }

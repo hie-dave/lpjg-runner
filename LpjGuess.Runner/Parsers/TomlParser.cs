@@ -59,7 +59,7 @@ internal class TomlParser : IParser
 		bool dryRun = ParseBool(model, "dry_run", optional: true);
 		bool runLocal = ParseBool(model, "run_local");
 
-		uint cpuCount = ParseUint(model, "cpu_count");
+		ushort cpuCount = ParseUshort(model, "cpu_count");
 		uint memory = ParseUint(model, "memory");
 		TimeSpan walltime = ParseTimeSpan(model, "walltime");
 
@@ -276,6 +276,32 @@ internal class TomlParser : IParser
 		string? value = model[keyName].ToString();
 		if (value == null || !uint.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint result))
 			throw new InvalidOperationException($"{keyName} must be uint (0..{uint.MaxValue})");
+
+		return result;
+	}
+
+	/// <summary>
+	/// Parse uint value from the input file with the given key name. If the key
+	/// does not exist, an exception will be thrown, unless optional is set to
+	/// true, in which case false will be returned.
+	/// </summary>
+	/// <param name="model">Parsed input object.</param>
+	/// <param name="keyName">Key name.</param>
+	/// <param name="optional">Is this parameter optional?</param>
+	private ushort ParseUshort(TomlTable model, string keyName, bool optional = false)
+	{
+		if (!model.ContainsKey(keyName))
+		{
+			if (optional)
+				// Return default value.
+				return 0;
+			else
+				throw new InvalidOperationException(VarNotSet(keyName));
+		}
+
+		string? value = model[keyName].ToString();
+		if (value == null || !ushort.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out ushort result))
+			throw new InvalidOperationException($"{keyName} must be ushort (0..{ushort.MaxValue})");
 
 		return result;
 	}

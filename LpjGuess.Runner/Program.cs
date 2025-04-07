@@ -24,6 +24,8 @@ Console.CancelKeyPress += (_, args) =>
 	args.Cancel = true;
 };
 
-await input.RunAllAsync(cancellation.Token);
+IEnumerable<Job> jobs = input.GenerateAllJobs(cancellation.Token);
+JobManager jobManager = new JobManager(input.Settings);
+await jobManager.RunAllAsync(jobs, cancellation.Token);
 
 return 0;

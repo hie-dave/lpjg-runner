@@ -24,6 +24,6 @@ Console.CancelKeyPress += (_, args) =>
 	args.Cancel = true;
 };
 
-await input.RunAll(cancellation.Token);
+await input.RunAllAsync(cancellation.Token);
 
 return 0;

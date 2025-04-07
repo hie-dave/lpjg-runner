@@ -40,7 +40,7 @@ public class RunSettings
 	/// <summary>
 	/// Number of CPUs to be allocated to the job.
 	/// </summary>
-	public uint CpuCount { get; private init; }
+	public ushort CpuCount { get; private init; }
 
 	/// <summary>
 	/// Maximum walltime allowed for the job.
@@ -93,7 +93,7 @@ public class RunSettings
 	/// <param name="emailNotifications">True to enable email notifications for the job, false otherwise.</param>
 	/// <param name="emailAddress">Email address to be used for the job. Only used if emailNotifications is true.</param>
 	/// <param name="jobName">Name of the job.</param>
-	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, uint cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
+	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, ushort cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
 	{
 		DryRun = dryRun;
 		RunLocal = runLocal;

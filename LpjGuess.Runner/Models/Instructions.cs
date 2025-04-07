@@ -55,66 +55,57 @@ public class Instructions
 	/// Run all of the factorial simulations.
 	/// </summary>
 	/// <param name="ct">Cancellation token.</param>
-	public async Task RunAll(CancellationToken ct)
+	public async Task RunAllAsync(CancellationToken ct)
 	{
-		List<Task> tasks = new List<Task>();
-		Action<string> callback = insFile =>
-		{
-			Task task = RunFile(insFile, ct);
-			lock (tasks)
-				tasks.Add(task);
-		};
-
+		IEnumerable<string> query = InsFiles;
 		if (Settings.ParallelProcessing)
-			Parallel.ForEach(InsFiles, callback);
-		else
-			InsFiles.ToList().ForEach(callback);
+		{
+			query = query.AsParallel()
+						 .WithDegreeOfParallelism(Settings.CpuCount)
+						 .WithCancellation(ct);
+		}
 
-		foreach (Task task in tasks)
-			await task;
+		IEnumerable<Job> jobs = query.SelectMany(ins => GenerateJobs(ins, ct));
+		await Parallel.ForEachAsync(
+			jobs,
+			new ParallelOptions
+			{
+				MaxDegreeOfParallelism = Settings.CpuCount,
+				CancellationToken = ct
+			},
+			async (job, ct) =>
+			{
+				IRunner runner = CreateRunner(job.Name);
+				await runner.Run(job.InsFile, ct);
+			});
 	}
 
 	/// <summary>
-	/// Run all factorials for the specified instruction file.
+	/// Generate all jobs to be run for the specified instruction file.
 	/// </summary>
 	/// <param name="insFile">Path to the instruction file.</param>
-	/// <param name="ct">Cancellation token.</param>
-	private async Task RunFile(string insFile, CancellationToken ct)
+	private IEnumerable<Job> GenerateJobs(string insFile, CancellationToken ct)
 	{
-		List<Task> tasks = new List<Task>();
-
-		// Run each factorial one by one.
-		// foreach (Factorial factorial in Factorials)
-		Action<Factorial> callback = factorial =>
-		{
-			Task task = RunFactorial(insFile, factorial, ct);
-			lock (tasks)
-				tasks.Add(task);
-		};
+		IEnumerable<Factorial> query = Factorials;
 
 		if (Settings.ParallelProcessing)
-			Parallel.ForEach(Factorials, callback);
-		else
-			Factorials.ToList().ForEach(callback);
+		{
+			query = query.AsParallel()
+			 			 .WithDegreeOfParallelism(Settings.CpuCount)
+						 .WithCancellation(ct);
+		}
 
-		foreach (Task task in tasks)
-			await task;
+		return query.Select(f => GenerateSimulation(insFile, f));
 	}
 
-	private async Task RunFactorial(string insFile, Factorial factorial, CancellationToken ct)
+	private Job GenerateSimulation(string insFile, Factorial factorial)
 	{
 		// Apply changes from this factorial.
-		ct.ThrowIfCancellationRequested();
 		string jobName = factorial.GetName();
 		if (InsFiles.Count > 1)
 			jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{jobName}";
 		string targetInsFile = ApplyOverrides(factorial, insFile, jobName);
-
-		// Run this factorial (well, submit the job for running).
-		ct.ThrowIfCancellationRequested();
-
-		IRunner runner = CreateRunner(jobName);
-		await runner.Run(targetInsFile, ct);
+		return new Job(jobName, targetInsFile);
 	}
 
 	/// <summary>

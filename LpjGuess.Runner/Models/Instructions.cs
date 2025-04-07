@@ -139,7 +139,12 @@ public class Instructions
 	{
 		string file = Path.GetFileNameWithoutExtension(insFile);
 		string ext = Path.GetExtension(insFile);
-		string jobDirectory = Path.Combine(Settings.OutputDirectory, name);
+		string jobDirectory = Settings.OutputDirectory;
+		// Create a more complex file tree when running multiple .ins files
+		// (typically multiple sites) and multiple factorials of each .ins file.
+		if (insFile.Length > 1 && Factorials.Count > 1)
+			jobDirectory = Path.Combine(jobDirectory, file);
+		jobDirectory = Path.Combine(jobDirectory, name);
 		string targetInsFile = Path.Combine(jobDirectory, $"{file}-{name}{ext}");
 		Directory.CreateDirectory(jobDirectory);
 

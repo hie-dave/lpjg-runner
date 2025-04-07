@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace LpjGuess.Runner.Models;
 
 /// <summary>
@@ -39,6 +41,11 @@ public class Factor
 	/// </summary>
 	public string GetShortName()
 	{
+		// Check if it's a number. If it is, we want to preserve the period,
+		// because decimal point. If it's not, we don't want to preserve the
+		// period (if there is one), because it may well be a file extension.
+		if (double.TryParse(Value, CultureInfo.InvariantCulture, out _))
+			return Value;
 		return Path.GetFileNameWithoutExtension(Value);
 	}
 }

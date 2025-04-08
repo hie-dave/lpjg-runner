@@ -114,6 +114,14 @@ public class Instructions
 			foreach (Factor factor in factorial.Factors)
 				ins.ApplyChange(factor);
 
+			// Disable all PFTs except those required.
+			if (Pfts.Count > 0)
+			{
+				ins.DisableAllPfts();
+				foreach (string pft in Pfts)
+					ins.EnablePft(pft);
+			}
+
 			string content = ins.GenerateContent();
 			File.WriteAllText(targetInsFile, content);
 

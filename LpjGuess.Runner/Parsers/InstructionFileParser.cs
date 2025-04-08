@@ -1,6 +1,7 @@
 using System.Text;
 using LpjGuess.Runner.Extensions;
 using LpjGuess.Runner.Models;
+using Tomlyn.Syntax;
 
 namespace LpjGuess.Runner.Parsers;
 
@@ -9,6 +10,9 @@ namespace LpjGuess.Runner.Parsers;
 /// </summary>
 public class InstructionFileParser
 {
+    private const string blockPft = "pft";
+    private const string includeParameter = "include";
+
     private class ParameterOccurrence
     {
         public string Name { get; set; } = "";
@@ -325,21 +329,9 @@ public class InstructionFileParser
 		}
 	}
 
-    /// <summary>
-    /// Sets a parameter value within a specific block.
-    /// </summary>
-    /// <param name="blockType">Type of the block (e.g., "group", "pft")</param>
-    /// <param name="blockName">Name of the block</param>
-    /// <param name="paramName">Name of the parameter</param>
-    /// <param name="value">New value</param>
-    /// <returns>True if parameter was found and updated, false otherwise</returns>
-    public bool SetBlockParameterValue(string blockType, string blockName, string paramName, string value)
+    private void SetBlockParameterValue(Block block, string paramName, string value)
     {
-        var block = _blocks.FirstOrDefault(b => b.Type == blockType && b.Name == blockName);
-        if (block == null)
-            return false;
-
-        var newParam = new InstructionParameter(value);
+        InstructionParameter newParam = new InstructionParameter(value);
         bool isNewParameter = !block.Parameters.ContainsKey(paramName);
         
         // Update the parameter dictionary
@@ -390,8 +382,23 @@ public class InstructionFileParser
             // Update the line in RawLines
             block.RawLines[occurrence.LineNumber] = newLine;
         }
+    }
 
-        return true;
+    /// <summary>
+    /// Sets a parameter value within a specific block.
+    /// </summary>
+    /// <param name="blockType">Type of the block (e.g., "group", "pft")</param>
+    /// <param name="blockName">Name of the block</param>
+    /// <param name="paramName">Name of the parameter</param>
+    /// <param name="value">New value</param>
+    /// <returns>True if parameter was found and updated, false otherwise</returns>
+    public void SetBlockParameterValue(string blockType, string blockName, string paramName, string value)
+    {
+        var block = _blocks.FirstOrDefault(b => b.Type == blockType && b.Name == blockName);
+        if (block == null)
+            throw new InvalidOperationException($"No block found named '{blockName}' with type '{blockType}'");
+
+        SetBlockParameterValue(block, paramName, value);
     }
 
     /// <summary>
@@ -407,6 +414,34 @@ public class InstructionFileParser
 
         _topLevelParams[paramName] = new InstructionParameter(value);
         return true;
+    }
+
+    /// <summary>
+    /// Enable the PFT with the specified name. Throws if it's not defined.
+    /// </summary>
+    /// <param name="pft">Name of the PFT to be enabled.</param>
+    public void EnablePft(string pft)
+    {
+        SetBlockParameterValue(blockPft, pft, includeParameter, "1");
+    }
+
+    /// <summary>
+    /// Disable all PFTs defined in the instruction file.
+    /// </summary>
+    public void DisableAllPfts()
+    {
+        foreach (var block in _blocks.Where(b => b.Type == blockPft))
+            SetBlockParameterValue(block, includeParameter, "0");
+    }
+
+    /// <summary>
+    /// Check whether a PFT is defined with the given name.
+    /// </summary>
+    /// <param name="name">Name of the PFT.</param>
+    /// <returns>True iff the PFT is defined.</returns>
+    public bool IsPft(string name)
+    {
+        return _blocks.Any(b => b.Type == blockPft && b.Name == name);
     }
 
     /// <summary>

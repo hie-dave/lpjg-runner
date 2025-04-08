@@ -316,7 +316,7 @@ sla 53.1
         string content = "param \"test_param\" (str \"old_value\")";
         var parser = new InstructionFileParser(content);
 
-        bool success = parser.SetBlockParameterValue("param", "test_param", "str", "new_value");
+        parser.SetBlockParameterValue("param", "test_param", "str", "new_value");
         string newContent = parser.GenerateContent();
 
         // Assert.True(success);

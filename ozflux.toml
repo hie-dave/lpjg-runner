@@ -1,0 +1,115 @@
+
+################################################################################
+# Global Settings
+################################################################################
+
+# PFTs to be used in the run. This can be omitted to run all PFTs.
+#pfts = ["TeBE"]
+
+# Instruction files to be run.
+#insfiles = [
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/AdelaideRiver/AdelaideRiver.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/AliceSpringsMulga/AliceSpringsMulga.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Boyagin/Boyagin.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Calperum/Calperum.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CapeTribulation/CapeTribulation.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Collie/Collie.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CowBay/CowBay.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CumberlandPlain/CumberlandPlain.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/DalyPasture/DalyPasture.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/DalyUncleared/DalyUncleared.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/DryRiver/DryRiver.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Emerald/Emerald.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/FletcherView/FletcherView.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/FoggDam/FoggDam.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Gingin/Gingin.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/GreatWesternWoodlands/GreatWesternWoodlands.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/HowardSprings/HowardSprings.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Litchfield/Litchfield.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Longreach/Longreach.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Otway/Otway.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RedDirtMelonFarm/RedDirtMelonFarm.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Ridgefield/Ridgefield.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RiggsCreek/RiggsCreek.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RobsonCreek/RobsonCreek.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Samford/Samford.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/SilverPlains/SilverPlains.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/SturtPlains/SturtPlains.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/TiTreeEast/TiTreeEast.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Tumbarumba/Tumbarumba.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WallabyCreek/WallabyCreek.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Warra/Warra.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Whroo/Whroo.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WombatStateForest/WombatStateForest.ins",
+#    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Yanco/Yanco.ins",
+#]
+insfiles = [
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CumberlandPlain/CumberlandPlain.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/FletcherView/FletcherView.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/GreatWesternWoodlands/GreatWesternWoodlands.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/HowardSprings/HowardSprings.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RobsonCreek/RobsonCreek.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Tumbarumba/Tumbarumba.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Warra/Warra.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WombatStateForest/WombatStateForest.ins",
+]
+
+# If true, the run directories will be created but not submitted to PBS.
+dry_run = false
+
+# Output directory. Outputs and run configuration will be written here.
+output_directory = "/home/drew/code/lpj-guess/runner/output"
+
+# Path to the guess executable.
+guess_path = "/home/drew/code/lpj-guess/dave/build/guess"
+
+# Input module to be used by LPJ-Guess.
+input_module = "nc"
+
+# Base name of all jobs. Each factorial will have a unique suffix appended to
+# this name. Outputs will be saved in ${output_directory}/${job_name}/
+job_name = "ozflux"
+
+# True to run locally, false to submit to PBS. This will run all simulations in
+# parallel.
+run_local = true
+
+################################################################################
+# PBS Settings - Optional when run_local is true
+################################################################################
+
+# Number of CPUs to be allocated to each run. Only used in PBS mode.
+cpu_count = 22
+
+# Maximum amount of walltime for each run.
+walltime = "01:00:00"
+
+# Amount of memory to be allocated to each run, in GiB.
+memory = 1
+
+# PBS queue to be used for running the jobs.
+queue = "normal"
+
+# NCI project to be used for running the jobs.
+project = "pt17"
+
+# true to receive email notifications of job status, false otherwise.
+email_notifications = true
+
+# Email address which should receive email notifications. May be omitted iff
+# email_notifications is false.
+email_address = "me@example.com"
+
+# Iff true, the processing code will execute in parallel. No effect on execution
+# of simulations.
+parallel = false
+
+################################################################################
+# Parameters
+################################################################################
+
+# List of parameter changes to be applied. Each instruction file will be run for
+# all combinations of these changes.
+[parameters]
+TeBE.sla = [20, 25, 30]
+TeBE.g0 = [0.003, 0.004, 0.005]

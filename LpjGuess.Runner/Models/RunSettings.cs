@@ -79,6 +79,11 @@ public class RunSettings
 	public string JobName { get; private init; }
 
 	/// <summary>
+	/// Iff true, all combinations of parameters will be run.
+	/// </summary>
+	public bool FullFactorial { get; private init; }
+
+	/// <summary>
 	/// Create a new <see cref="RunSettings"/> instance.
 	/// </summary>
 	/// <param name="dryRun">Iff true, the run directory will be created but the job will not be submitted.</param>
@@ -93,7 +98,8 @@ public class RunSettings
 	/// <param name="emailNotifications">True to enable email notifications for the job, false otherwise.</param>
 	/// <param name="emailAddress">Email address to be used for the job. Only used if emailNotifications is true.</param>
 	/// <param name="jobName">Name of the job.</param>
-	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, ushort cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName)
+	/// <param name="fullFactorial">Iff true, all combinations of parameters will be run.</param>
+	public RunSettings(bool dryRun, bool runLocal, string outputDirectory, string guessPath, string inputModule, ushort cpuCount, TimeSpan walltime, uint memory, string queue, string project, bool emailNotifications, string emailAddress, string jobName, bool fullFactorial)
 	{
 		DryRun = dryRun;
 		RunLocal = runLocal;
@@ -108,5 +114,6 @@ public class RunSettings
 		EmailNotifications = emailNotifications;
 		EmailAddress = emailAddress;
 		JobName = jobName;
+		FullFactorial = fullFactorial;
 	}
 }

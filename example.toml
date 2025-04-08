@@ -24,6 +24,10 @@ job_name = "example"
 # parallel.
 run_local = true
 
+# If true, all combinations of parameters will be run. If false, one simulation
+# will be run for each parameter value.
+full_factorial = false
+
 ################################################################################
 # PBS Settings - Optional when run_local is true
 ################################################################################
@@ -50,12 +54,8 @@ email_notifications = true
 # email_notifications is false.
 email_address = "me@example.com"
 
-# Iff true, the processing code will execute in parallel. No effect on execution
-# of simulations.
-parallel = false
-
 ################################################################################
-# End of PBS settings
+# Parameters
 ################################################################################
 
 # List of parameter changes to be applied. Each instruction file will be run for

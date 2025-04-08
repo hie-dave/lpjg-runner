@@ -33,8 +33,8 @@ internal class TomlParser : IParser
 	/// <param name="model">The raw user input object.</param>
 	private Instructions Parse(TomlTable model)
 	{
-		IReadOnlyCollection<Factorial> combinations = ParseParameters(model);
 		RunSettings settings = ParseRunSettings(model);
+		IReadOnlyCollection<Factorial> combinations = ParseParameters(model, settings.FullFactorial);
 		IReadOnlyCollection<string> pfts = ParsePfts(model);
 		IReadOnlyCollection<string> insFiles = ParseInsFiles(model);
 
@@ -55,7 +55,7 @@ internal class TomlParser : IParser
 
 	private RunSettings ParseRunSettings(TomlTable model)
 	{
-		bool parallel = ParseBool(model, "parallel");
+		bool fullFactorial = ParseBool(model, "full_factorial");
 		bool dryRun = ParseBool(model, "dry_run", optional: true);
 		bool runLocal = ParseBool(model, "run_local");
 
@@ -88,7 +88,8 @@ internal class TomlParser : IParser
 			project,
 			emailNotifications,
 			emailAddress,
-			jobName
+			jobName,
+			fullFactorial
 		);
 	}
 
@@ -96,7 +97,7 @@ internal class TomlParser : IParser
 	/// Parse all factorial settings from the model.
 	/// </summary>
 	/// <param name="model">The model.</param>
-	private IReadOnlyCollection<Factorial> ParseParameters(TomlTable model)
+	private IReadOnlyCollection<Factorial> ParseParameters(TomlTable model, bool fullFactorial)
 	{
 		const string keyParameters = "parameters";
 		if (!model.ContainsKey(keyParameters))
@@ -115,14 +116,14 @@ internal class TomlParser : IParser
 				parameters[key] = ParseStringArray(section, key).ToList();
 		}
 
-		return GetParameters(parameters);
+		return GetParameters(parameters, fullFactorial);
 	}
 
 	/// <summary>
 	/// Get all combinations of factors from the user inputs.
 	/// </summary>
 	/// <param name="parameters">The parameters as they appear in the user input object.</param>
-	private IReadOnlyCollection<Factorial> GetParameters(IDictionary<string, List<string>> parameters)
+	private IReadOnlyCollection<Factorial> GetParameters(IDictionary<string, List<string>> parameters, bool fullFactorial)
 	{
 		if (parameters.Count == 0)
 			return new List<Factorial>();
@@ -130,10 +131,14 @@ internal class TomlParser : IParser
 		// Convert dictionary to 2D list of factors.
 		List<List<Factor>> factors = new List<List<Factor>>();
 		foreach ((string key, IReadOnlyList<string> values) in parameters)
-			factors.Add(new List<Factor>(values.Select(v => new Factor(key, v))));
+			factors.Add([.. values.Select(v => new Factor(key, v))]);
 
 		// Return all combinations thereof.
-		List<List<Factor>> combinations = factors.AllCombinations();
+		List<List<Factor>> combinations;
+		if (fullFactorial)
+			combinations = factors.AllCombinations();
+		else
+			combinations = factors.SelectMany(f => f.Select(f => new List<Factor> { f })).ToList();
 		return combinations.Select(c => new Factorial(c)).ToList();
 	}
 

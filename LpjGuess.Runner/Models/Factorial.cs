@@ -42,9 +42,6 @@ public class Factorial
             allFactors.AddRange(group.GetFactorsForIndex(0)); // Use first value for name
         }
 
-        if (allFactors.Count == 1)
-            return allFactors.First().GetShortName();
-
         return string.Join("-", allFactors.Select(f => f.GetName()));
     }
 }

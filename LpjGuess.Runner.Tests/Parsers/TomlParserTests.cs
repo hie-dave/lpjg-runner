@@ -4,6 +4,7 @@ using LpjGuess.Runner.Parsers;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Tomlyn;
 using Xunit;
 
 namespace LpjGuess.Runner.Tests.Parsers;
@@ -59,8 +60,9 @@ public class TomlParserTests : IDisposable
             email_notifications = true
             email_address = "user@example.com"
 
-            [parameter_sets.baseline]
-            parameters = { co2 = [350, 400, 450] }
+            [[parameter_sets]]
+            name = "baseline"
+            co2 = [350, 400, 450]
 
             [[runs]]
             name = "baseline_run"
@@ -88,11 +90,12 @@ public class TomlParserTests : IDisposable
 
         Assert.NotNull(config.ParameterSets);
         Assert.Single(config.ParameterSets);
-        Assert.True(config.ParameterSets.ContainsKey("baseline"));
-        Assert.NotNull(config.ParameterSets["baseline"].Parameters);
-        Assert.Single(config.ParameterSets["baseline"].Parameters);
-        Assert.True(config.ParameterSets["baseline"].Parameters.ContainsKey("co2"));
-        Assert.Equal(3, config.ParameterSets["baseline"].Parameters["co2"].Length);
+        Assert.Contains(config.ParameterSets, p => p.Name == "baseline");
+        ParameterSet baseline = config.ParameterSets.First(p => p.Name == "baseline");
+        Assert.NotNull(baseline.Parameters);
+        Assert.Single(baseline.Parameters);
+        Assert.True(baseline.Parameters.ContainsKey("co2"));
+        Assert.Equal(3, baseline.Parameters["co2"].Length);
 
         Assert.NotNull(config.Runs);
         Assert.Single(config.Runs);

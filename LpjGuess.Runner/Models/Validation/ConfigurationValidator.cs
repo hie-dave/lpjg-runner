@@ -24,7 +24,8 @@ public class ConfigurationValidator
         ValidateGlobal(dto.Global);
         ValidatePbs(dto.Pbs);
         ValidateParameterSets(dto.ParameterSets);
-        ValidateRuns(dto.Runs, dto.ParameterSets.Keys);
+        // Name cannot be null here.
+        ValidateRuns(dto.Runs, dto.ParameterSets.Select(p => p.Name!));
     }
 
     private void ValidateGlobal(GlobalConfigDto global)
@@ -57,29 +58,29 @@ public class ConfigurationValidator
                 "EmailAddress is required when EmailNotifications is true.");
     }
 
-    private void ValidateParameterSets(Dictionary<string, ParameterSetDto> sets)
+    private void ValidateParameterSets(List<ParameterSetDto> sets)
     {
-        foreach (var kvp in sets)
+        foreach (var set in sets)
         {
-            if (string.IsNullOrWhiteSpace(kvp.Key))
+            if (string.IsNullOrWhiteSpace(set.Name))
                 throw new ValidationException("Parameter set names cannot be empty.");
-            if (kvp.Value.Parameters == null)
+            if (set.Parameters == null)
                 throw new ValidationException(
-                    $"Parameters dictionary is required in set '{kvp.Key}'.");
+                    $"Parameters dictionary is required in set '{set.Name}'.");
 
-            foreach (var param in kvp.Value.Parameters)
+            foreach (var param in set.Parameters)
             {
                 if (string.IsNullOrWhiteSpace(param.Key))
                     throw new ValidationException(
-                        $"Parameter names cannot be empty in set '{kvp.Key}'.");
+                        $"Parameter names cannot be empty in set '{set.Name}'.");
                 if (param.Value == null || param.Value.Length == 0)
                     throw new ValidationException(
-                        $"Parameter '{param.Key}' in set '{kvp.Key}' must have values.");
+                        $"Parameter '{param.Key}' in set '{set.Name}' must have values.");
             }
         }
     }
 
-    private void ValidateRuns(List<RunConfigDto> runs, ICollection<string> validSets)
+    private void ValidateRuns(List<RunConfigDto> runs, IEnumerable<string> validSets)
     {
         foreach (RunConfigDto run in runs)
         {

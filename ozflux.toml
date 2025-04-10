@@ -19,18 +19,21 @@ dry_run = false
 
 # Iff true, the processing/setup will be run in parallel. This has no effect
 # on job execution. The only real reason to disable this is for debugging.
-parallel = true
+parallel = false
 
 # Baseline parameter set - currently not using this.
-[parameter_sets.baseline]
+[[parameter_sets]]
+name = "baseline"
 
 # Parameter changes for temperate sites.
-[parameter_sets.temperate]
+[[parameter_sets]]
+name = "temperate"
 TeBE.k_allom2 = [50, 60, 70]
 TeBE.k_latosa = [5000, 6000, 7000]
 
 # Parameter changes for tropical sites.
-[parameter_sets.tropical]
+[[parameter_sets]]
+name = "tropical"
 TrBE.k_allom2 = [30, 40, 50]
 TrBE.k_latosa = [5500, 6000, 6500]
 

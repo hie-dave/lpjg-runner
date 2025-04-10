@@ -1,21 +1,28 @@
 namespace LpjGuess.Runner.Models;
 
 /// <summary>
-/// A set of parameters and their values.
+/// A named set of parameters that can be applied to a run.
 /// </summary>
 public class ParameterSet
 {
     /// <summary>
     /// Creates a new instance of ParameterSet.
     /// </summary>
-    /// <param name="parameters">Parameters and their values in this set.</param>
-    public ParameterSet(Dictionary<string, object[]> parameters)
+    /// <param name="name">Name of this parameter set.</param>
+    /// <param name="parameters">Dictionary of parameter names to their values.</param>
+    public ParameterSet(string name, IReadOnlyDictionary<string, object[]> parameters)
     {
+        Name = name;
         Parameters = parameters;
     }
 
     /// <summary>
-    /// Parameters and their values in this set.
+    /// Name of this parameter set.
     /// </summary>
-    public Dictionary<string, object[]> Parameters { get; }
+    public string Name { get; }
+
+    /// <summary>
+    /// Dictionary of parameter names to their values.
+    /// </summary>
+    public IReadOnlyDictionary<string, object[]> Parameters { get; }
 }

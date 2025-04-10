@@ -10,12 +10,12 @@ public class Configuration
     /// </summary>
     /// <param name="global">Global configuration settings.</param>
     /// <param name="pbs">Optional PBS configuration settings.</param>
-    /// <param name="parameterSets">Named parameter sets that can be referenced by runs.</param>
+    /// <param name="parameterSets">Parameter sets that can be referenced by runs.</param>
     /// <param name="runs">Individual run configurations.</param>
     public Configuration(
         GlobalConfig global,
         PbsConfig? pbs,
-        Dictionary<string, ParameterSet> parameterSets,
+        IReadOnlyCollection<ParameterSet> parameterSets,
         RunConfig[] runs)
     {
         Global = global;
@@ -35,9 +35,9 @@ public class Configuration
     public PbsConfig? Pbs { get; }
 
     /// <summary>
-    /// Named parameter sets that can be referenced by runs.
+    /// Parameter sets that can be referenced by runs.
     /// </summary>
-    public Dictionary<string, ParameterSet> ParameterSets { get; }
+    public IReadOnlyCollection<ParameterSet> ParameterSets { get; }
 
     /// <summary>
     /// Individual run configurations.

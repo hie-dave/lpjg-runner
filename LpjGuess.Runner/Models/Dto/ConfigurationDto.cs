@@ -7,6 +7,6 @@ public class ConfigurationDto
 {
     public GlobalConfigDto? Global { get; set; }
     public PbsConfigDto? Pbs { get; set; }
-    public Dictionary<string, ParameterSetDto>? ParameterSets { get; set; }
+    public List<ParameterSetDto>? ParameterSets { get; set; }
     public List<RunConfigDto>? Runs { get; set; }
 }

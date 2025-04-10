@@ -1,3 +1,5 @@
+using System.Runtime.Serialization;
+
 namespace LpjGuess.Runner.Models;
 
 /// <summary>
@@ -8,7 +10,7 @@ public class RunSettings
 	/// <summary>
 	/// Iff true, the processing code will be executed in parallel.
 	/// </summary>
-	public bool ParallelProcessing { get; private init; }
+	public bool Parallel { get; private init; }
 
 	/// <summary>
 	/// Iff true, the run directory will be created but the job will not be
@@ -48,12 +50,12 @@ public class RunSettings
 	public TimeSpan Walltime { get; private init; }
 
 	/// <summary>
-	/// Amount of memory to be allocated to the job.
+	/// Amount of memory to be allocated to the job, in GiB.
 	/// </summary>
 	public uint Memory { get; private init; }
 
 	/// <summary>
-	/// Queue to which the job shoudl be submitted.
+	/// Queue to which the job should be submitted.
 	/// </summary>
 	public string Queue { get; private init; }
 
@@ -82,6 +84,9 @@ public class RunSettings
 	/// Iff true, all combinations of parameters will be run.
 	/// </summary>
 	public bool FullFactorial { get; private init; }
+
+	public Dictionary<string, object> Parameters { get; private init; }
+
 
 	/// <summary>
 	/// Create a new <see cref="RunSettings"/> instance.

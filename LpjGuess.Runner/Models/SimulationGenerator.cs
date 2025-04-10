@@ -10,7 +10,7 @@ namespace LpjGuess.Runner.Models;
 /// <remarks>
 /// Refactor most of the logic out of here.
 /// </remarks>
-public class Instructions
+public class SimulationGenerator
 {
 	/// <summary>
 	/// List of paths to instruction files to be run.
@@ -34,13 +34,13 @@ public class Instructions
 	public RunSettings Settings { get; private init; }
 
 	/// <summary>
-	/// Create a new <see cref="Instructions"/> instance.
+	/// Create a new <see cref="SimulationGenerator"/> instance.
 	/// </summary>
 	/// <param name="insFiles">List of paths to instruction files to be run.</param>
 	/// <param name="pfts">List of PFTs to be enabled for this run. All others will be disabled. If empty, no PFTs will be disabled.</param>
 	/// <param name="parameters">The parameter changes being applied in this run.</param>
 	/// <param name="settings">Run settings.</param>
-	public Instructions(IReadOnlyCollection<string> insFiles, IReadOnlyCollection<string> pfts
+	public SimulationGenerator(IReadOnlyCollection<string> insFiles, IReadOnlyCollection<string> pfts
 		, IReadOnlyCollection<Factorial> factorials, RunSettings settings)
 	{
 		InsFiles = insFiles;
@@ -58,7 +58,7 @@ public class Instructions
 	public IEnumerable<Job> GenerateAllJobs(CancellationToken ct)
 	{
 		IEnumerable<string> query = InsFiles;
-		if (Settings.ParallelProcessing)
+		if (Settings.Parallel)
 		{
 			query = query.AsParallel()
 						 .WithDegreeOfParallelism(Settings.CpuCount)
@@ -76,7 +76,7 @@ public class Instructions
 	{
 		IEnumerable<Factorial> query = Factorials;
 
-		if (Settings.ParallelProcessing)
+		if (Settings.Parallel)
 		{
 			query = query.AsParallel()
 			 			 .WithDegreeOfParallelism(Settings.CpuCount)

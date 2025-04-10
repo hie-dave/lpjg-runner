@@ -13,7 +13,7 @@ namespace LpjGuess.Runner.Parsers;
 internal class TomlParser : IParser
 {
 	/// <inheritdoc />
-	public Instructions Parse(string file)
+	public SimulationGenerator Parse(string file)
 	{
 		try
 		{
@@ -31,14 +31,14 @@ internal class TomlParser : IParser
 	/// some manual validation of inputs not covered by the library.
 	/// </summary>
 	/// <param name="model">The raw user input object.</param>
-	private Instructions Parse(TomlTable model)
+	private SimulationGenerator Parse(TomlTable model)
 	{
 		RunSettings settings = ParseRunSettings(model);
 		IReadOnlyCollection<Factorial> combinations = ParseParameters(model, settings.FullFactorial);
 		IReadOnlyCollection<string> pfts = ParsePfts(model);
 		IReadOnlyCollection<string> insFiles = ParseInsFiles(model);
 
-		return new Instructions(insFiles, pfts, combinations, settings);
+		return new SimulationGenerator(insFiles, pfts, combinations, settings);
 	}
 
 	private IReadOnlyCollection<string> ParseInsFiles(TomlTable model)

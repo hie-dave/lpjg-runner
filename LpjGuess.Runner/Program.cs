@@ -11,7 +11,7 @@ if (args.Length == 0)
 
 string inputFile = args[0];
 IParser parser = new TomlParser();
-Instructions input = parser.Parse(inputFile);
+SimulationGenerator input = parser.Parse(inputFile);
 
 CancellationTokenSource cancellation = new CancellationTokenSource();
 Console.CancelKeyPress += (_, args) =>

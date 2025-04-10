@@ -56,6 +56,11 @@ public class JobManager
 			return;
 		}
 
+		// Set progress to 0 for all jobs. If we don't do this, only those jobs
+		// which have run or are running will exist in jobProgress.
+		foreach (var job in jobs)
+			jobProgress[job.Name] = 0;
+
 		await Parallel.ForEachAsync(
 			jobs,
 			new ParallelOptions

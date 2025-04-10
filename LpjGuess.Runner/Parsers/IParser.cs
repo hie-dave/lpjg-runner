@@ -7,9 +7,10 @@ namespace LpjGuess.Runner.Parsers;
 /// </summary>
 internal interface IParser
 {
-	/// <summary>
-	/// Parse an input file.
-	/// </summary>
-	/// <param name="file">Path to the input file.</param>
-	SimulationGenerator Parse(string file);
+    /// <summary>
+    /// Parse an input file.
+    /// </summary>
+    /// <param name="file">Path to the input file.</param>
+    /// <returns>The parsed configuration.</returns>
+    Configuration Parse(string file);
 }

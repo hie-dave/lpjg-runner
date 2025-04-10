@@ -5,6 +5,20 @@ namespace LpjGuess.Runner.Extensions;
 /// </summary>
 public static class EnumerableExtensions
 {
+	public static async Task<IEnumerable<TResult>> SelectAsync<T, TResult>(this IEnumerable<T> source, Func<T, Task<TResult>> selector)
+	{
+		IEnumerable<Task<TResult>> tasks = source.Select(selector);
+		IEnumerable<TResult> results = await Task.WhenAll(tasks);
+		return results;
+	}
+
+	public static async Task<IEnumerable<TResult>> SelectManyAsync<T, TResult>(this IEnumerable<T> source, Func<T, Task<IEnumerable<TResult>>> selector)
+	{
+		IEnumerable<Task<IEnumerable<TResult>>> tasks = source.Select(selector);
+		IEnumerable<IEnumerable<TResult>> results = await Task.WhenAll(tasks);
+		return results.SelectMany(x => x);
+	}
+
 	/// <summary>
 	/// Return all combinations of the items in the list.
 	/// </summary>

@@ -1,12 +1,80 @@
 
-################################################################################
-# Global Settings
-################################################################################
+[global]
 
-# PFTs to be used in the run. This can be omitted to run all PFTs.
-#pfts = ["TeBE"]
+# Path to the lpj-guess executable.
+guess_path = "/home/drew/code/lpj-guess/dave/build/guess"
+
+# The input module to be used by LPJ-Guess.
+input_module = "nc"
+
+# Path to the output directory.
+output_directory = "/home/drew/code/lpj-guess/runner/output"
+
+# Number of CPU cores available to the jobs.
+cpu_count = 1
+
+# Iff true, the run directories and instruction files will be created but, no
+# simulations will be run.
+dry_run = false
+
+# Iff true, the processing/setup will be run in parallel. This has no effect
+# on job execution. The only real reason to disable this is for debugging.
+parallel = true
+
+# Baseline parameter set - currently not using this.
+[parameter_sets.baseline]
+
+# Parameter changes for temperate sites.
+[parameter_sets.temperate]
+TeBE.k_allom2 = [50, 60, 70]
+TeBE.k_latosa = [5000, 6000, 7000]
+
+# Parameter changes for tropical sites.
+[parameter_sets.tropical]
+TrBE.k_allom2 = [30, 40, 50]
+TrBE.k_latosa = [5500, 6000, 6500]
+
+# Runs of temperate sites.
+[[runs]]
+# Name of this run. Used as a prefix for the output directory.
+name = "temperate"
 
 # Instruction files to be run.
+insfiles = [
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CumberlandPlain/CumberlandPlain.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Tumbarumba/Tumbarumba.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Warra/Warra.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WombatStateForest/WombatStateForest.ins",
+]
+
+# The parameter changes to be used for this run.
+parameter_sets = ["temperate"]
+
+# If true, all combinations of parameter values are run. If false, one
+# simulation is run for each parameter value (per instruction file).
+full_factorial = false
+
+
+# Runs of tropical sites.
+[[runs]]
+# Name of this run. Used as a prefix for the output directory.
+name = "tropical"
+
+# Instruction files to be run.
+insfiles = [
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Litchfield/Litchfield.ins",
+    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RobsonCreek/RobsonCreek.ins",
+]
+
+# The parameter changes to be used for this run.
+parameter_sets = ["tropical"]
+
+# If true, all combinations of parameter values are run. If false, one
+# simulation is run for each parameter value (per instruction file).
+full_factorial = false
+
+
+
 #insfiles = [
 #    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/AdelaideRiver/AdelaideRiver.ins",
 #    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/AliceSpringsMulga/AliceSpringsMulga.ins",
@@ -43,73 +111,3 @@
 #    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WombatStateForest/WombatStateForest.ins",
 #    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Yanco/Yanco.ins",
 #]
-insfiles = [
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/CumberlandPlain/CumberlandPlain.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/FletcherView/FletcherView.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/GreatWesternWoodlands/GreatWesternWoodlands.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/HowardSprings/HowardSprings.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/RobsonCreek/RobsonCreek.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Tumbarumba/Tumbarumba.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/Warra/Warra.ins",
-    "/home/drew/code/lpj-guess/dave/benchmarks/ozflux/WombatStateForest/WombatStateForest.ins",
-]
-
-# If true, the run directories will be created but not submitted to PBS.
-dry_run = false
-
-# Output directory. Outputs and run configuration will be written here.
-output_directory = "/home/drew/code/lpj-guess/runner/output"
-
-# Path to the guess executable.
-guess_path = "/home/drew/code/lpj-guess/dave/build/guess"
-
-# Input module to be used by LPJ-Guess.
-input_module = "nc"
-
-# Base name of all jobs. Each factorial will have a unique suffix appended to
-# this name. Outputs will be saved in ${output_directory}/${job_name}/
-job_name = "ozflux"
-
-# True to run locally, false to submit to PBS. This will run all simulations in
-# parallel.
-run_local = true
-
-################################################################################
-# PBS Settings - Optional when run_local is true
-################################################################################
-
-# Number of CPUs to be allocated to each run. Only used in PBS mode.
-cpu_count = 22
-
-# Maximum amount of walltime for each run.
-walltime = "01:00:00"
-
-# Amount of memory to be allocated to each run, in GiB.
-memory = 1
-
-# PBS queue to be used for running the jobs.
-queue = "normal"
-
-# NCI project to be used for running the jobs.
-project = "pt17"
-
-# true to receive email notifications of job status, false otherwise.
-email_notifications = true
-
-# Email address which should receive email notifications. May be omitted iff
-# email_notifications is false.
-email_address = "me@example.com"
-
-# Iff true, the processing code will execute in parallel. No effect on execution
-# of simulations.
-parallel = false
-
-################################################################################
-# Parameters
-################################################################################
-
-# List of parameter changes to be applied. Each instruction file will be run for
-# all combinations of these changes.
-[parameters]
-TeBE.sla = [20, 25, 30]
-TeBE.g0 = [0.003, 0.004, 0.005]

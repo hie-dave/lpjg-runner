@@ -8,7 +8,7 @@ public class JobManager
 	/// <summary>
 	/// Configuration parameters for the run.
 	/// </summary>
-	private readonly RunSettings settings;
+	private readonly Configuration config;
 
 	/// <summary>
 	/// The jobs managed by this job manager instance.
@@ -33,11 +33,11 @@ public class JobManager
 	/// <summary>
 	/// Create a new <see cref="JobManager"/> instance.
 	/// </summary>
-	/// <param name="settings">Run settings.</param>
-	public JobManager(RunSettings settings, IEnumerable<Job> jobs)
+	/// <param name="config">Run settings.</param>
+	public JobManager(Configuration config, IEnumerable<Job> jobs)
 	{
 		this.jobs = jobs.ToList();
-		this.settings = settings;
+		this.config = config;
 		jobProgress = new Dictionary<string, int>();
 		startTime = DateTime.Now;
 		lastUpdate = DateTime.MinValue;
@@ -50,7 +50,7 @@ public class JobManager
 	/// <param name="ct">Cancellation token.</param>
 	public async Task RunAllAsync(CancellationToken ct)
 	{
-		if (settings.DryRun)
+		if (config.Global.DryRun)
 		{
 			Console.WriteLine("Dry run - jobs would be executed");
 			return;
@@ -65,7 +65,7 @@ public class JobManager
 			jobs,
 			new ParallelOptions
 			{
-				MaxDegreeOfParallelism = settings.CpuCount,
+				MaxDegreeOfParallelism = config.Global.CpuCount,
 				CancellationToken = ct
 			},
 			RunJobAsync);
@@ -145,8 +145,8 @@ public class JobManager
 	/// <param name="jobName">Name of the job.</param>
 	private IRunner CreateRunner(string jobName)
 	{
-		return settings.RunLocal 
-			? new LocalRunner(settings) 
-			: new PbsRunner(jobName, settings);
+		return config.Pbs == null
+			? new LocalRunner(config.Global) 
+			: new PbsRunner(jobName, config.Global, config.Pbs);
 	}
 }

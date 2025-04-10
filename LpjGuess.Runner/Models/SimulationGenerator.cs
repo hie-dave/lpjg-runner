@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Threading.Tasks;
+using LpjGuess.Runner.Extensions;
 using LpjGuess.Runner.Parsers;
 
 namespace LpjGuess.Runner.Models;
@@ -12,26 +14,26 @@ namespace LpjGuess.Runner.Models;
 /// </remarks>
 public class SimulationGenerator
 {
-	/// <summary>
-	/// List of paths to instruction files to be run.
-	/// </summary>
-	public IReadOnlyCollection<string> InsFiles { get; private init; }
+	// /// <summary>
+	// /// List of paths to instruction files to be run.
+	// /// </summary>
+	// public IReadOnlyCollection<string> InsFiles { get; private init; }
 
-	/// <summary>
-	/// List of PFTs to be enabled for this run. All others will be disabled.
-	/// If empty, no PFTs will be disabled.
-	/// </summary>
-	public IReadOnlyCollection<string> Pfts { get; private init; }
+	// /// <summary>
+	// /// List of PFTs to be enabled for this run. All others will be disabled.
+	// /// If empty, no PFTs will be disabled.
+	// /// </summary>
+	// public IReadOnlyCollection<string> Pfts { get; private init; }
 
-	/// <summary>
-	/// The parameter changes being applied in this run.
-	/// </summary>
-	public IReadOnlyCollection<Factorial> Factorials { get; private init; }
+	// /// <summary>
+	// /// The parameter changes being applied in this run.
+	// /// </summary>
+	// public IReadOnlyCollection<Factorial> Factorials { get; private init; }
 
 	/// <summary>
 	/// Run settings.
 	/// </summary>
-	public RunSettings Settings { get; private init; }
+	public Configuration Settings { get; private init; }
 
 	/// <summary>
 	/// Create a new <see cref="SimulationGenerator"/> instance.
@@ -40,71 +42,74 @@ public class SimulationGenerator
 	/// <param name="pfts">List of PFTs to be enabled for this run. All others will be disabled. If empty, no PFTs will be disabled.</param>
 	/// <param name="parameters">The parameter changes being applied in this run.</param>
 	/// <param name="settings">Run settings.</param>
-	public SimulationGenerator(IReadOnlyCollection<string> insFiles, IReadOnlyCollection<string> pfts
-		, IReadOnlyCollection<Factorial> factorials, RunSettings settings)
+	public SimulationGenerator(Configuration settings)
 	{
-		InsFiles = insFiles;
-		Pfts = pfts;
 		Settings = settings;
-		if (factorials.Count == 0)
-			factorials = new List<Factorial>() { new Factorial(new List<Factor>()) };
-		Factorials = factorials;
 	}
 
 	/// <summary>
 	/// Generate all jobs for these instructions.
 	/// </summary>
 	/// <param name="ct">Cancellation token.</param>
-	public IEnumerable<Job> GenerateAllJobs(CancellationToken ct)
+	public async Task<IEnumerable<Job>> GenerateAllJobsAsync(CancellationToken ct)
 	{
-		IEnumerable<string> query = InsFiles;
-		if (Settings.Parallel)
+		IEnumerable<RunConfig> query = Settings.Runs;
+		if (Settings.Global.Parallel)
 		{
 			query = query.AsParallel()
-						 .WithDegreeOfParallelism(Settings.CpuCount)
+						 .WithDegreeOfParallelism(Settings.Global.CpuCount)
 						 .WithCancellation(ct);
 		}
 
-		return query.SelectMany(ins => GenerateJobs(ins, ct));
+		return await query.SelectManyAsync(run => GenerateJobsAsync(run, ct));
 	}
 
 	/// <summary>
 	/// Generate all jobs to be run for the specified instruction file.
 	/// </summary>
-	/// <param name="insFile">Path to the instruction file.</param>
-	private IEnumerable<Job> GenerateJobs(string insFile, CancellationToken ct)
+	/// <param name="run">The run configuration.</param>
+	private async Task<IEnumerable<Job>> GenerateJobsAsync(RunConfig run, CancellationToken ct)
 	{
-		IEnumerable<Factorial> query = Factorials;
+		IEnumerable<Factorial> query = run.GenerateFactorials().ToList();
+		int nfactorial = query.Count();
 
-		if (Settings.Parallel)
+		if (Settings.Global.Parallel)
 		{
 			query = query.AsParallel()
-			 			 .WithDegreeOfParallelism(Settings.CpuCount)
+			 			 .WithDegreeOfParallelism(Settings.Global.CpuCount)
 						 .WithCancellation(ct);
 		}
 
-		return query.Select(f => GenerateSimulation(insFile, f));
+		return await query.SelectManyAsync(f => GenerateSimulationsAsync(run, f, nfactorial));
 	}
 
-	private Job GenerateSimulation(string insFile, Factorial factorial)
+	private async Task<IEnumerable<Job>> GenerateSimulationsAsync(RunConfig run, Factorial factorial, int nfactorial)
 	{
 		// Apply changes from this factorial.
-		string jobName = factorial.GetName();
-		if (InsFiles.Count > 1)
-			jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{jobName}";
-		string targetInsFile = ApplyOverrides(factorial, insFile, jobName);
-		return new Job(jobName, targetInsFile);
+		List<Job> jobs = new();
+		foreach (string insFile in run.InsFiles)
+		{
+			string jobName = factorial.GetName();
+			// If total number of ins files > 1, use base name plus factorial
+			// name in order to distinguish between them.
+			if (Settings.Runs.Sum(r => r.InsFiles.Length) > 1)
+				jobName = $"{Path.GetFileNameWithoutExtension(insFile)}-{jobName}";
+			string targetInsFile = await ApplyOverridesAsync(factorial, insFile, jobName, nfactorial, run.InsFiles.Length, run.Pfts);
+			jobs.Add(new Job(jobName, targetInsFile));
+		}
+
+		return jobs;
 	}
 
-	private string ApplyOverrides(Factorial factorial, string insFile, string name)
+	private async Task<string> ApplyOverridesAsync(Factorial factorial, string insFile, string name, int nfactorial, int nins, string[] pfts)
 	{
-		string file = Path.GetFileNameWithoutExtension(insFile);
+		string basename = Path.GetFileNameWithoutExtension(insFile);
 		string ext = Path.GetExtension(insFile);
-		string jobDirectory = Settings.OutputDirectory;
-		if (insFile.Length > 1 && Factorials.Count > 1)
-			jobDirectory = Path.Combine(jobDirectory, file);
+		string jobDirectory = Settings.Global.OutputDirectory;
+		if (nins > 1 && nfactorial > 1)
+			jobDirectory = Path.Combine(jobDirectory, basename);
 		jobDirectory = Path.Combine(jobDirectory, name);
-		string targetInsFile = Path.Combine(jobDirectory, $"{file}-{name}{ext}");
+		string targetInsFile = Path.Combine(jobDirectory, $"{basename}-{name}{ext}");
 		Directory.CreateDirectory(jobDirectory);
 
 		try
@@ -115,15 +120,15 @@ public class SimulationGenerator
 				ins.ApplyChange(factor);
 
 			// Disable all PFTs except those required.
-			if (Pfts.Count > 0)
+			if (pfts.Length > 0)
 			{
 				ins.DisableAllPfts();
-				foreach (string pft in Pfts)
+				foreach (string pft in pfts)
 					ins.EnablePft(pft);
 			}
 
 			string content = ins.GenerateContent();
-			File.WriteAllText(targetInsFile, content);
+			await File.WriteAllTextAsync(targetInsFile, content);
 
 			return targetInsFile;
 		}

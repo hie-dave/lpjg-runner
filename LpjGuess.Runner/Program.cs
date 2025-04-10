@@ -1,39 +1,44 @@
-﻿using LpjGuess.Runner.Models;
+using LpjGuess.Runner.Models;
 using LpjGuess.Runner.Parsers;
 
 const string appName = "lpjg-experiment";
 
 if (args.Length == 0)
 {
-	Console.Error.WriteLine($"Usage: {appName} <config-file>");
-	return 1;
+    Console.Error.WriteLine($"Usage: {appName} <config-file>");
+    return 1;
 }
 
 string inputFile = args[0];
 IParser parser = new TomlParser();
-SimulationGenerator input = parser.Parse(inputFile);
+Configuration config = parser.Parse(inputFile);
+SimulationGenerator generator = new SimulationGenerator(config);
 
 CancellationTokenSource cancellation = new CancellationTokenSource();
 Console.CancelKeyPress += (_, args) =>
 {
-	cancellation.Cancel();
+    cancellation.Cancel();
 
-	// Setting args.Cancel to false causes the application to exit when this
-	// event handler exits. We need to continue execution in order to kill any
-	// potential child processes.
-	args.Cancel = true;
+    // Setting args.Cancel to false causes the application to exit when this
+    // handler returns, which is what we want since we've cancelled the
+    // simulations.
+    args.Cancel = false;
 };
 
-IEnumerable<Job> jobs = input.GenerateAllJobs(cancellation.Token);
-JobManager jobManager = new JobManager(input.Settings, jobs);
 try
 {
-	await jobManager.RunAllAsync(cancellation.Token);
+    IEnumerable<Job> jobs = await generator.GenerateAllJobsAsync(cancellation.Token);
+    JobManager jobManager = new JobManager(config, jobs);
+    await jobManager.RunAllAsync(cancellation.Token);
+    return 0;
 }
-catch (ModelException ex)
+catch (OperationCanceledException)
 {
-	Console.Error.WriteLine(ex.Message);
-	return 1;
+    Console.Error.WriteLine("Cancelled.");
+    return 1;
 }
-
-return 0;
+catch (Exception error)
+{
+    Console.Error.WriteLine($"Error: {error.Message}");
+    return 1;
+}

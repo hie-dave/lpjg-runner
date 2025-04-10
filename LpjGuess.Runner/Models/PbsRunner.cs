@@ -20,19 +20,26 @@ public class PbsRunner : IRunner
     private readonly string jobName;
 
     /// <summary>
-    /// Settings to be used for the run.
+    /// Global settings.
     /// </summary>
-    private readonly RunSettings settings;
+    private readonly GlobalConfig global;
+
+	/// <summary>
+	/// PBS settings.
+	/// </summary>
+	private readonly PbsConfig pbs;
 
     /// <summary>
     /// Create a new <see cref="PbsRunner"/> instance.
     /// </summary>
     /// <param name="jobName">Name of the job to use in PBS.</param>
-    /// <param name="dryRun">True to do a dry-run (ie not submit to PBS). False to run the job.</param>
-    public PbsRunner(string jobName, RunSettings settings)
+	/// <param name="global">Global configuration settings.</param>
+	/// <param name="pbs">PBS configuration settings.</param>
+    public PbsRunner(string jobName, GlobalConfig global, PbsConfig pbs)
     {
         this.jobName = jobName;
-        this.settings = settings;
+        this.global = global;
+		this.pbs = pbs;
     }
 
     public event EventHandler<ProgressEventArgs>? ProgressChanged;
@@ -57,7 +64,7 @@ public class PbsRunner : IRunner
 				proc.StartInfo.ArgumentList.Add("-q");
 				proc.StartInfo.ArgumentList.Add("-s");
 				proc.StartInfo.ArgumentList.Add(confFile);
-				if (settings.DryRun)
+				if (global.DryRun)
 					proc.StartInfo.ArgumentList.Add("-d");
 
 				// Run the submit script.
@@ -112,7 +119,7 @@ public class PbsRunner : IRunner
 			string confFile = Path.Combine(Path.GetTempPath(), $"{name}.conf");
 
 			// This is the OUTPUT_DIR we pass to the submit script.
-			string outPath = Path.Combine(settings.OutputDirectory);
+			string outPath = Path.Combine(global.OutputDirectory);
 			if (!Directory.Exists(outPath))
 				Directory.CreateDirectory(outPath);
 
@@ -126,18 +133,19 @@ public class PbsRunner : IRunner
 			using (Stream stream = File.Open(confFile, FileMode.Create))
 			using (TextWriter writer = new StreamWriter(stream))
 			{
-				await Write(writer, binary, settings.GuessPath);
-				await Write(writer, nprocess, settings.CpuCount);
-				await Write(writer, walltime, settings.Walltime);
-				await Write(writer, memory, $"{settings.Memory}GB");
-				await Write(writer, queue, settings.Queue);
-				await Write(writer, project, settings.Project);
-				await Write(writer, email, settings.EmailAddress);
-				await Write(writer, emailNotifications, settings.EmailNotifications ? "1" : "0");
-				await Write(writer, jobName, $"{settings.JobName}_{factName}");
+				await Write(writer, binary, global.GuessPath);
+				await Write(writer, nprocess, global.CpuCount);
+				await Write(writer, walltime, pbs.Walltime);
+				await Write(writer, memory, $"{pbs.Memory}GB");
+				await Write(writer, queue, pbs.Queue);
+				await Write(writer, project, pbs.Project);
+				if (pbs.EmailAddress != null)
+					await Write(writer, email, pbs.EmailAddress);
+				await Write(writer, emailNotifications, pbs.EmailNotifications ? "1" : "0");
+				await Write(writer, jobName, $"{this.jobName}_{factName}");
 				await Write(writer, outDir, outPath);
 				await Write(writer, insfile, insFile);
-				await Write(writer, inputModule, settings.InputModule);
+				await Write(writer, inputModule, global.InputModule);
 				await Write(writer, experiment, factName);
 			}
 			return confFile;

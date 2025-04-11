@@ -51,6 +51,7 @@ public class TomlParserTests : IDisposable
             input_module = "nc"
             output_directory = "/path/to/output"
             cpu_count = 1
+            dry_run = false
 
             [pbs]
             walltime = "01:00:00"

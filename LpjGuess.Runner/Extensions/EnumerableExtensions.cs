@@ -20,6 +20,23 @@ public static class EnumerableExtensions
 	}
 
 	/// <summary>
+	/// Create a new dictionary containing the input dictionary, minus the
+	/// specified keys.
+	/// </summary>
+	/// <typeparam name="TKey">The key type of the dictionary.</typeparam>
+	/// <typeparam name="TValue">The value type of the dictionary.</typeparam>
+	/// <param name="dict">The input dictionary.</param>
+	/// <param name="keysToExclude">The keys to exclude from the dictionary.</param>
+	/// <returns>A new dictionary containing the input dictionary, minus the specified keys.</returns>
+	public static IDictionary<TKey, TValue> ExcludeKeys<TKey, TValue>(this IDictionary<TKey, TValue> dict, IEnumerable<TKey> keysToExclude) where TKey : notnull
+	{
+		Dictionary<TKey, TValue> result = new(dict);
+		foreach (TKey key in keysToExclude)
+			result.Remove(key);
+		return result;
+	}
+
+	/// <summary>
 	/// Return all combinations of the items in the list.
 	/// </summary>
 	/// <remarks>

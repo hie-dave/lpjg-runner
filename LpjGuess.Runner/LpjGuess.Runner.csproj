@@ -6,7 +6,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AssemblyName>lpjg-experiment</AssemblyName>
-		<PublishAot>true</PublishAot>
 		<StripSymbols>true</StripSymbols>
 	</PropertyGroup>
 

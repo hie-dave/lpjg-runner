@@ -17,14 +17,14 @@ public class RunConfig
         string name,
         string[] insFiles,
         string[] parameterSets,
-        string[] pfts,
+        string[]? pfts,
         bool fullFactorial)
     {
         Name = name;
         InsFiles = insFiles;
         ParameterSets = parameterSets;
         FullFactorial = fullFactorial;
-        Pfts = pfts;
+        Pfts = pfts ?? Array.Empty<string>();
     }
 
     /// <summary>

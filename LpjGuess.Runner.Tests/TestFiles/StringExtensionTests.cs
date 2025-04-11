@@ -1,4 +1,5 @@
 using LpjGuess.Runner.Extensions;
+using Microsoft.VisualStudio.TestPlatform.Common.Utilities;
 
 namespace LpjGuess.Runner.Tests;
 
@@ -32,5 +33,23 @@ public class StringExtensionTests
     {
         string[] result = input.SplitHonouringQuotes([','], true);
         Assert.Equal(expectedOutput, result);
+    }
+
+    [Theory]
+    [InlineData("this_is_a_name", "thisIsAName")]
+    [InlineData("ThisIsPascalCase", "thisIsPascalCase")]
+    public void TestToCamelCase(string input, string expected)
+    {
+        string actual = input.ToCamelCase();
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("this_is_a_name", "ThisIsAName")]
+    [InlineData("ThisIsPascalCase", "ThisIsPascalCase")]
+    public void TestToPascalCase(string input, string expected)
+    {
+        string actual = input.ToPascalCase();
+        Assert.Equal(expected, actual);
     }
 }

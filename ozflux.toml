@@ -15,7 +15,7 @@ cpu_count = 1
 
 # Iff true, the run directories and instruction files will be created but, no
 # simulations will be run.
-dry_run = false
+dry_run = true
 
 # Iff true, the processing/setup will be run in parallel. This has no effect
 # on job execution. The only real reason to disable this is for debugging.

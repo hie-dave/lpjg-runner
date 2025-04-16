@@ -63,7 +63,7 @@ public class TomlParserTests : IDisposable
 
             [[parameter_sets]]
             name = "baseline"
-            co2 = [350, 400, 450]
+            TeBE.sla = [350, 400, 450]
 
             [[runs]]
             name = "baseline_run"

@@ -162,13 +162,25 @@ public static class ReflectionExtensions
                 }
             }
         }
-        
+
+        if (IsDictionaryWithKey<string>(value.GetType(), out Type? valueType))
+        {
+            // value = ToDictionary(value, typeof(object));
+            MethodInfo method = typeof(ReflectionExtensions).GetMethod(nameof(ToDictionary))!;
+            method = method.MakeGenericMethod(typeof(string), valueType);
+            value = method.Invoke(null, [value, valueType]);
+        }
+
         // Handle complex type conversions
         if (value is IDictionary<string, object> nestedTable && !targetType.IsPrimitive && targetType != typeof(string))
+        // if (value != null && value.GetType().IsDictionaryWithKey<string>(out Type? v) && !targetType.IsPrimitive && targetType != typeof(string))
         {
+            // IDictionary<string, object> nestedTable = ((IDictionary)value).Cast<DictionaryEntry>().ToDictionary(kvp => (string)kvp.Key, kvp => (object)kvp.Value!);
             result = ToComplexType(nestedTable, targetType);
             return true;
         }
+
+        // TODO: detect KeyValuePair<string, object>?
 
         try
         {

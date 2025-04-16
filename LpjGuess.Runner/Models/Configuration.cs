@@ -1,3 +1,5 @@
+using LpjGuess.Runner.Models.Validation;
+
 namespace LpjGuess.Runner.Models;
 
 /// <summary>
@@ -43,4 +45,67 @@ public class Configuration
     /// Individual run configurations.
     /// </summary>
     public RunConfig[] Runs { get; }
+
+    public void Validate()
+    {
+        // Validate global config
+        if (string.IsNullOrWhiteSpace(Global.GuessPath))
+            throw new ValidationException("GuessPath is required.");
+        if (string.IsNullOrWhiteSpace(Global.InputModule))
+            throw new ValidationException("InputModule is required.");
+        if (string.IsNullOrWhiteSpace(Global.OutputDirectory))
+            throw new ValidationException("OutputDirectory is required.");
+        if (Global.CpuCount == 0)
+            throw new ValidationException("CpuCount must be greater than 0.");
+
+        // Validate PBS config if present
+        if (Pbs != null)
+        {
+            if (string.IsNullOrWhiteSpace(Pbs.Walltime))
+                throw new ValidationException("Walltime is required when PBS is configured.");
+            if (string.IsNullOrWhiteSpace(Pbs.Queue))
+                throw new ValidationException("Queue is required when PBS is configured.");
+            if (string.IsNullOrWhiteSpace(Pbs.Project))
+                throw new ValidationException("Project is required when PBS is configured.");
+            if (Pbs.Memory == 0)
+                throw new ValidationException("Memory must be greater than 0.");
+            if (Pbs.EmailNotifications && string.IsNullOrWhiteSpace(Pbs.EmailAddress))
+                throw new ValidationException("EmailAddress is required when EmailNotifications is true.");
+        }
+
+        // Validate parameter sets
+        foreach (ParameterSet set in ParameterSets)
+        {
+            if (string.IsNullOrWhiteSpace(set.Name))
+                throw new ValidationException("Parameter set names cannot be empty.");
+            if (set.Parameters == null)
+                throw new ValidationException($"Parameters dictionary is required in set '{set.Name}'.");
+
+            foreach (var param in set.Parameters)
+            {
+                if (string.IsNullOrWhiteSpace(param.Key))
+                    throw new ValidationException($"Parameter names cannot be empty in set '{set.Name}'.");
+                if (param.Value == null || param.Value.Length == 0)
+                    throw new ValidationException($"Parameter '{param.Key}' in set '{set.Name}' must have values.");
+            }
+        }
+
+        // Validate runs
+        HashSet<string> validSetNames = ParameterSets.Select(p => p.Name).ToHashSet();
+        foreach (RunConfig run in Runs)
+        {
+            if (string.IsNullOrWhiteSpace(run.Name))
+                throw new ValidationException("Run name is required.");
+            if (run.InsFiles == null || run.InsFiles.Length == 0)
+                throw new ValidationException($"InsFiles are required in run '{run.Name}'.");
+            if (run.ParameterSets == null || run.ParameterSets.Length == 0)
+                throw new ValidationException($"ParameterSets are required in run '{run.Name}'.");
+
+            foreach (string set in run.ParameterSets)
+            {
+                if (!validSetNames.Contains(set))
+                    throw new ValidationException($"Run '{run.Name}' references undefined parameter set '{set}'.");
+            }
+        }
+    }
 }

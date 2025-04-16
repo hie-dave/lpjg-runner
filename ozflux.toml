@@ -74,6 +74,10 @@ job_name = "ozflux"
 # parallel.
 run_local = true
 
+# If true, all combinations of parameters will be run. If false, only one
+# simulation for each specified parameter change will be run.
+full_factorial = false
+
 ################################################################################
 # PBS Settings - Optional when run_local is true
 ################################################################################

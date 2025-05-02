@@ -120,5 +120,38 @@ public class RunSettings
 		EmailAddress = emailAddress;
 		JobName = jobName;
 		FullFactorial = fullFactorial;
+		Parameters = [];
 	}
+
+	public JobManagerConfiguration ToJobManagerConfig()
+	{
+		IRunnerConfiguration runConfig = CreateRunConfig();
+		return new JobManagerConfiguration(
+			runConfig,
+			CpuCount,
+			DryRun,
+			InputModule
+		);
+	}
+
+    private IRunnerConfiguration CreateRunConfig()
+    {
+        if (RunLocal)
+			return new LocalRunnerConfiguration(GuessPath, "Local Runner");
+
+		// Not "local" - assume PBS job submission.
+		return new PbsRunnerConfiguration(
+			GuessPath,
+			JobName,
+			DryRun,
+			OutputDirectory,
+			CpuCount,
+			Walltime,
+			Memory,
+			Queue,
+			Project,
+			EmailNotifications,
+			EmailAddress
+		);
+    }
 }

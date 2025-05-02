@@ -25,10 +25,18 @@ Console.CancelKeyPress += (_, args) =>
 };
 
 IEnumerable<Job> jobs = input.GenerateAllJobs(cancellation.Token);
-JobManager jobManager = new JobManager(input.Settings, jobs);
+IProgressReporter progress = new ConsoleProgressReporter();
+
+// Don't stream stdout/stderr to this process' tty; it will be included in
+// a model exception if one is thrown due to model execution failure.
+IOutputHelper outputHelper = new OutputIgnorer();
+
+JobManagerConfiguration jobSettings = input.Settings.ToJobManagerConfig();
+JobManager jobManager = new JobManager(jobSettings, progress, outputHelper, jobs);
 try
 {
 	await jobManager.RunAllAsync(cancellation.Token);
+	Console.WriteLine();
 }
 catch (ModelException ex)
 {

@@ -6,11 +6,6 @@ namespace LpjGuess.Runner.Models;
 public interface IRunner
 {
 	/// <summary>
-	/// Event raised when progress is reported.
-	/// </summary>
-	event EventHandler<ProgressEventArgs> ProgressChanged;
-
-	/// <summary>
 	/// Run the simulation.
 	/// </summary>
 	/// <param name="job">The job to be run.</param>
@@ -19,17 +14,22 @@ public interface IRunner
 }
 
 /// <summary>
-/// Progress event arguments.
+/// Interface to a runner which can be monitored.
 /// </summary>
-public class ProgressEventArgs : EventArgs
+public interface IMonitorableRunner : IRunner
 {
 	/// <summary>
-	/// Current progress percentage (0-100).
+	/// Event raised when progress is reported.
 	/// </summary>
-	public int Percentage { get; init; }
+	event EventHandler<ProgressEventArgs> ProgressChanged;
 
 	/// <summary>
-	/// Job name.
+	/// Event raised when standard output is written.
 	/// </summary>
-	public string JobName { get; init; } = string.Empty;
+	event EventHandler<OutputEventArgs> OutputReceived;
+
+	/// <summary>
+	/// Event raised when standard error is written.
+	/// </summary>
+	event EventHandler<OutputEventArgs> ErrorReceived;
 }

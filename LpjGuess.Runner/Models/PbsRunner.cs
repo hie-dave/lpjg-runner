@@ -14,41 +14,33 @@ public class PbsRunner : IRunner
     /// </summary>
     private const string submitScript = "submit_to_gadi.sh";
 
-    /// <summary>
-    /// Name of the job toe use in PBS.
-    /// </summary>
-    private readonly string jobName;
+	/// <summary>
+	/// The input module to use.
+	/// </summary>
+	private readonly string inputModule;
 
     /// <summary>
     /// Settings to be used for the run.
     /// </summary>
-    private readonly RunSettings settings;
+    private readonly PbsRunnerConfiguration settings;
 
     /// <summary>
     /// Create a new <see cref="PbsRunner"/> instance.
     /// </summary>
-    /// <param name="jobName">Name of the job to use in PBS.</param>
-    /// <param name="dryRun">True to do a dry-run (ie not submit to PBS). False to run the job.</param>
-    public PbsRunner(string jobName, RunSettings settings)
+	/// <param name="settings">Runner settings.</param>
+	/// <param name="inputModule">The input module to use.</param>
+    public PbsRunner(PbsRunnerConfiguration settings, string inputModule)
     {
-        this.jobName = jobName;
         this.settings = settings;
+		this.inputModule = inputModule;
     }
-
-    public event EventHandler<ProgressEventArgs>? ProgressChanged;
 
     /// <inheritdoc />
     public async Task RunAsync(Job job, CancellationToken ct)
     {
 		try
 		{
-			ProgressChanged?.Invoke(this, new ProgressEventArgs()
-			{
-				Percentage = 0,
-				JobName = job.Name
-			});
-
-			string confFile = await GenerateConfFile(job.InsFile, jobName);
+			string confFile = await GenerateConfFile(job.InsFile, job.Name);
 			ct.ThrowIfCancellationRequested();
 
 			using (Process proc = new Process())
@@ -66,12 +58,6 @@ public class PbsRunner : IRunner
 				if (ct.IsCancellationRequested && !proc.HasExited)
 					proc.Kill();
 				ct.ThrowIfCancellationRequested();
-
-				ProgressChanged?.Invoke(this, new ProgressEventArgs()
-				{
-					Percentage = 100,
-					JobName = job.Name
-				});
 			}
 		}
 		catch (OperationCanceledException)
@@ -89,7 +75,9 @@ public class PbsRunner : IRunner
 	/// </summary>
 	/// <param name="insFile">Path to the .ins file.</param>
 	/// <param name="factName">A name which uniquely identifies this factorial.</param>
-	private async Task<string> GenerateConfFile(string insFile, string factName)
+	private async Task<string> GenerateConfFile(
+		string insFile,
+		string factName)
 	{
 		try
 		{
@@ -132,12 +120,12 @@ public class PbsRunner : IRunner
 				await Write(writer, memory, $"{settings.Memory}GB");
 				await Write(writer, queue, settings.Queue);
 				await Write(writer, project, settings.Project);
-				await Write(writer, email, settings.EmailAddress);
+				await Write(writer, email, settings.EmailAddress ?? string.Empty);
 				await Write(writer, emailNotifications, settings.EmailNotifications ? "1" : "0");
-				await Write(writer, jobName, $"{settings.JobName}_{factName}");
+				await Write(writer, jobName, factName);
 				await Write(writer, outDir, outPath);
 				await Write(writer, insfile, insFile);
-				await Write(writer, inputModule, settings.InputModule);
+				await Write(writer, inputModule, this.inputModule);
 				await Write(writer, experiment, factName);
 			}
 			return confFile;

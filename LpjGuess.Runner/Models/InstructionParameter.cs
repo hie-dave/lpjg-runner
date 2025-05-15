@@ -26,7 +26,7 @@ public class InstructionParameter
     /// <summary>
     /// Gets the raw string value of the parameter.
     /// </summary>
-    public string AsString() => _rawValue;
+    public string AsString() => _rawValue.Trim('"');
 
     /// <summary>
     /// Attempts to get the parameter value as a double.

@@ -51,8 +51,14 @@ public class InstructionFileParser
     private int _currentLine;
     private string _lineEnding = "\n"; // Default
 
-    public InstructionFileParser(string content)
+    /// <summary>
+    /// Path to the instruction file.
+    /// </summary>
+    public string FilePath { get; private init; }
+
+    public InstructionFileParser(string content, string path)
     {
+        FilePath = path;
         if (string.IsNullOrWhiteSpace(content))
             throw new ArgumentException("Content cannot be empty", nameof(content));
 
@@ -76,7 +82,7 @@ public class InstructionFileParser
     public static InstructionFileParser FromFile(string path)
     {
         string contents = InstructionFileNormaliser.Normalise(path);
-        return new InstructionFileParser(contents);
+        return new InstructionFileParser(contents, path);
     }
 
     private void Parse()

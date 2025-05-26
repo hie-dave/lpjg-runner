@@ -1,12 +1,12 @@
 using LpjGuess.Runner.Models;
 using LpjGuess.Runner.Parsers;
 
-namespace LpjGuess.Runner.Extensions;
+namespace LpjGuess.Runner.Helpers;
 
 /// <summary>
-/// Extension methods for <see cref="InstructionFileParser"/> 
+/// Helper methods for parsing LPJ-GUESS instruction files.
 /// </summary>
-public static class InstructionFileParserExtensions
+public class InstructionFileHelper
 {
     /// <summary>
     /// Name of the instruction file parameter specifying the output directory.
@@ -35,13 +35,54 @@ public static class InstructionFileParserExtensions
     private const string parameterBlock = "param";
 
     /// <summary>
+    /// The parser used to parse the instruction file.
+    /// </summary>
+    private readonly InstructionFileParser parser;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InstructionFileHelper"/> class.
+    /// </summary>
+    /// <param name="parser">The parser used to parse the instruction file.</param>
+    public InstructionFileHelper(InstructionFileParser parser)
+    {
+        this.parser = parser;
+    }
+
+    /// <summary>
+    /// Get the gridlist parameter from an instruction file.
+    /// </summary>
+    /// <returns>Absolute path to the gridlist file.</returns>
+    public string GetGridlist()
+    {
+        InstructionParameter? parameter = parser.GetTopLevelParameter(paramGridlist);
+        if (parameter != null)
+            return NormalisePath(parameter.AsString());
+        parameter = parser.GetBlockParameter(parameterBlock, paramGridlistCf, strBlock);
+        if (parameter is null)
+            throw new InvalidOperationException($"Instruction file {parser.FilePath} does not contain a gridlist parameter");
+        return NormalisePath(parameter.AsString());
+    }
+
+    /// <summary>
+    /// Get the output directory from an instruction file.
+    /// </summary>
+    /// <returns>The absolute path to the output directory.</returns>
+    /// <exception cref="ArgumentException">Thrown if the output directory is not specified.</exception>
+    public string GetOutputDirectory()
+    {
+        InstructionParameter? parameter = parser.GetTopLevelParameter(outputDirectoryParameter);
+        if (parameter is null)
+            throw new ArgumentException($"File '{parser.FilePath}' does not specify an output directory");
+        return NormalisePath(parameter.AsString());
+    }
+
+    /// <summary>
     /// Convert a relative path to an absolute path, based on the directory
     /// of the instruction file.
     /// </summary>
     /// <param name="path">The relative path.</param>
-    /// <param name="parser">The instruction file parser.</param>
     /// <returns>The absolute path.</returns>
-    private static string NormalisePath(this InstructionFileParser parser, string path)
+    private string NormalisePath(string path)
     {
         string? directory = Path.GetDirectoryName(parser.FilePath);
         if (directory == null)
@@ -52,35 +93,5 @@ public static class InstructionFileParserExtensions
 
         string fullPath = Path.GetFullPath(Path.Combine(directory, path));
         return fullPath;
-    }
-
-    /// <summary>
-    /// Get the gridlist parameter from an instruction file.
-    /// </summary>
-    /// <param name="parser">The instruction file parser.</param>
-    /// <returns>Absolute path to the gridlist file.</returns>
-    public static string GetGridlist(this InstructionFileParser parser)
-    {
-        InstructionParameter? parameter = parser.GetTopLevelParameter(paramGridlist);
-        if (parameter != null)
-            return parser.NormalisePath(parameter.AsString());
-        parameter = parser.GetBlockParameter(parameterBlock, paramGridlistCf, strBlock);
-        if (parameter is null)
-            throw new InvalidOperationException($"Instruction file {parser.FilePath} does not contain a gridlist parameter");
-        return parser.NormalisePath(parameter.AsString());
-    }
-
-    /// <summary>
-    /// Get the output directory from an instruction file.
-    /// </summary>
-    /// <param name="parser">The instruction file parser.</param>
-    /// <returns>The absolute path to the output directory.</returns>
-    /// <exception cref="ArgumentException">Thrown if the output directory is not specified.</exception>
-    public static string GetOutputDirectory(this InstructionFileParser parser)
-    {
-        InstructionParameter? parameter = parser.GetTopLevelParameter(outputDirectoryParameter);
-        if (parameter is null)
-            throw new ArgumentException($"File '{parser.FilePath}' does not specify an output directory");
-        return parser.NormalisePath(parameter.AsString());
     }
 }

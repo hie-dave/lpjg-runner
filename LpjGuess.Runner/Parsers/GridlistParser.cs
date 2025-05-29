@@ -84,22 +84,24 @@ public class GridlistParser
 
     private class Coordinate
     {
+        private readonly double eps;
         public double Latitude { get; private init; }
         public double Longitude { get; private init; }
         public string? Name { get; private init; }
 
-        public Coordinate(double latitude, double longitude, string? name)
+        public Coordinate(double latitude, double longitude, string? name, double eps = 1e-2)
         {
             Latitude = latitude;
             Longitude = longitude;
             Name = name;
+            this.eps = eps;
         }
 
         public override bool Equals(object? obj)
         {
             if (obj is Coordinate other)
-                return MathUtility.AreEqual(Latitude, other.Latitude) &&
-                       MathUtility.AreEqual(Longitude, other.Longitude);
+                return MathUtility.AreEqual(Latitude, other.Latitude, eps) &&
+                       MathUtility.AreEqual(Longitude, other.Longitude, eps);
             return false;
         }
 

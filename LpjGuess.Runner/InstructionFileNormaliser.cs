@@ -20,6 +20,11 @@ public class InstructionFileNormaliser
 	/// </summary>
 	public string FilePath { get; private init; }
 
+	/// <summary>
+	/// List of import directives.
+	/// </summary>
+	private List<string> importDirectives;
+
 	private string rawContent;
 
 	/// <summary>
@@ -30,6 +35,7 @@ public class InstructionFileNormaliser
 	{
 		FilePath = path;
 		rawContent = File.ReadAllText(path);
+		importDirectives = new List<string>();
 	}
 
 	/// <summary>
@@ -53,6 +59,19 @@ public class InstructionFileNormaliser
 	}
 
 	/// <summary>
+	/// Get all import directives in the instruction file tree recursively.
+	/// </summary>
+	/// <param name="path">Path to the instruction file.</param>
+	/// <returns>Absolute paths to imported instruction files.</returns>
+	public static IEnumerable<string> ResolveImportDirectives(string path)
+	{
+		InstructionFileNormaliser ins = new(path);
+		ins.Flatten();
+		ins.ConvertToAbsolutePaths();
+		return ins.importDirectives;
+	}
+
+	/// <summary>
 	/// Copy the text of all imported .ins files, recursively, into this file.
 	/// </summary>
 	/// <returns>Contents of the flattened file.</returns>
@@ -61,10 +80,11 @@ public class InstructionFileNormaliser
 		string pattern = $@"^[ \t]*import[ \t]+""([^""]+)"".*\n";
 		RegexOptions opts = RegexOptions.Multiline;
 		Match match;
-		while ( (match = Regex.Match(rawContent, pattern, opts)) != Match.Empty)
+		while ((match = Regex.Match(rawContent, pattern, opts)) != Match.Empty)
 		{
 			string file = match.Groups[1].Value;
 			string absolutePath = GetAbsolutePath(file);
+			importDirectives.Add(absolutePath);
 			rawContent = rawContent.Remove(match.Index, match.Length);
 			InstructionFileNormaliser normaliser = new(absolutePath);
 			normaliser.Flatten();

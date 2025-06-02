@@ -88,6 +88,7 @@ public class InstructionFileNormaliser
 			rawContent = rawContent.Remove(match.Index, match.Length);
 			InstructionFileNormaliser normaliser = new(absolutePath);
 			normaliser.Flatten();
+			importDirectives.AddRange(normaliser.importDirectives);
 			rawContent = rawContent.Insert(match.Index, normaliser.Read());
 		}
 	}

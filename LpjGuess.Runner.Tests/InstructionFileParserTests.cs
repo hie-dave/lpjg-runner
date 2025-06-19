@@ -1,5 +1,6 @@
 using LpjGuess.Runner.Models;
 using LpjGuess.Runner.Parsers;
+using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 
 namespace LpjGuess.Runner.Tests;
 
@@ -134,6 +135,34 @@ sla 53.1
         {
             Assert.Equal(originalLines[i], generatedLines[i]);
         }
+    }
+
+    [Fact]
+    public void ModifiesTopLevelParametersCorrectly()
+    {
+        string content = @"myparam ""test""
+another_parameter 1
+float_param 1.2";
+
+        var parser = new InstructionFileParser(content, string.Empty);
+
+        parser.SetTopLevelParameterValue("myparam", "\"new_value\"");
+        parser.SetTopLevelParameterValue("another_parameter", "2");
+        parser.SetTopLevelParameterValue("float_param", "2.4");
+
+        string generatedContent = parser.GenerateContent();
+
+        InstructionFileParser newParser = new(generatedContent, string.Empty);
+        
+        InstructionParameter myparamValue = newParser.GetTopLevelParameter("myparam")!;
+        Assert.Equal("new_value", myparamValue.AsString());
+        Assert.True(myparamValue.IsQuoted, "Quoting of \"new_value\" was not preserved");
+
+        InstructionParameter anotherParameterValue = newParser.GetTopLevelParameter("another_parameter")!;
+        Assert.Equal(2, anotherParameterValue.AsInt());
+
+        InstructionParameter floatParamValue = newParser.GetTopLevelParameter("float_param")!;
+        Assert.Equal(2.4, floatParamValue.AsDouble());
     }
 
     [Fact]

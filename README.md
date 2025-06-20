@@ -2,6 +2,12 @@
 
 Run many LPJ-Guess simulations with modified parameter values.
 
+## Archived
+
+This repository is now read-only. The runner tool has now been migrated to the
+[GUI](https://github.com/hie-dave/lpjg-gui) repository. Future bugfixes are
+unlikely to be backported to this repository.
+
 ## Building
 
 To build in debug mode:
